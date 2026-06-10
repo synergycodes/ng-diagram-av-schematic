@@ -1,0 +1,61 @@
+name: Deploy to Azure
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Set base href
+        run: sed -i 's|<base href="/">|<base href="/templates/av/">|' ./dist/ng-diagram-av-schematic/browser/index.html
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Clear existing blobs
+        uses: azure/cli@v2
+        with:
+          azcliversion: latest
+          inlineScript: |
+            az storage blob delete-batch \
+              --account-name "${{ vars.AZURE_STORAGE_ACCOUNT }}" \
+              --source '${{ vars.AZURE_STORAGE_CONTAINER }}' \
+              --pattern 'av/*' \
+              --auth-mode login
+
+      - name: Upload to blob container
+        uses: azure/cli@v2
+        with:
+          azcliversion: latest
+          inlineScript: |
+            az storage blob upload-batch \
+              --account-name "${{ vars.AZURE_STORAGE_ACCOUNT }}" \
+              --destination '${{ vars.AZURE_STORAGE_CONTAINER }}' \
+              --destination-path 'av' \
+              --source ./dist/ng-diagram-av-schematic/browser \
+              --overwrite true \
+              --auth-mode login
