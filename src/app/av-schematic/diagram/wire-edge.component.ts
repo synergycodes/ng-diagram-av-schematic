@@ -5,6 +5,7 @@ import {
   effect,
   inject,
   input,
+  signal,
   viewChild,
 } from '@angular/core';
 import {
@@ -86,6 +87,8 @@ export class WireEdgeComponent implements NgDiagramEdgeTemplate<WireEdgeData> {
     }));
   });
 
+  protected readonly activeSegment = signal<number | null>(null);
+
   protected onSegmentStart(
     event: EdgeReshapePointerEvent,
     segmentIndex: number,
@@ -93,6 +96,7 @@ export class WireEdgeComponent implements NgDiagramEdgeTemplate<WireEdgeData> {
   ): void {
     const points = this.baseEdge()?.points();
     if (!points) return;
+    this.activeSegment.set(segmentIndex);
     this.reshapeHandler.onSegmentStart(
       this.edge().id,
       segmentIndex,
@@ -109,6 +113,7 @@ export class WireEdgeComponent implements NgDiagramEdgeTemplate<WireEdgeData> {
   }
 
   protected onReshapeEnd(event: EdgeReshapePointerEvent): void {
+    this.activeSegment.set(null);
     this.reshapeHandler.onEnd(event.pointerId);
   }
 

@@ -9,21 +9,34 @@
   @for (handle of segmentHandles(); track handle.id) {
     <ng-diagram-base-edge-label [id]="handle.id" [positionOnEdge]="'0px'">
       <span
-        class="bend-handle bend-handle--vertex"
+        class="wire-handle wire-handle--segment"
+        [class.is-horizontal]="handle.axis === 'horizontal'"
+        [class.is-vertical]="handle.axis === 'vertical'"
+        [class.is-dragging]="handle.segmentIndex === activeSegment()"
         [style.transform]="handle.transform"
         appEdgeReshape
         (reshapeStart)="onSegmentStart($event, handle.segmentIndex, handle.axis)"
         (reshapeContinue)="onReshapeContinue($event)"
         (reshapeEnd)="onReshapeEnd($event)"
         (contextmenu)="onSegmentContextMenu($event, handle.segmentIndex)"
-      ></span>
+      >
+        <svg class="wire-handle__arrow" viewBox="0 0 24 24" fill="none">
+          <path
+            d="M12 4V20M12 4L8.5 7.5M12 4L15.5 7.5M12 20L8.5 16.5M12 20L15.5 16.5"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+      </span>
     </ng-diagram-base-edge-label>
   }
 
   @for (endpoint of endpointHandles(); track endpoint.id) {
     <ng-diagram-base-edge-label [id]="endpoint.id" [positionOnEdge]="'0px'">
       <span
-        class="bend-handle bend-handle--endpoint"
+        class="wire-handle wire-handle--endpoint"
         [style.transform]="endpoint.transform"
         appEdgeReshape
         (reshapeStart)="onEndpointStart($event, endpoint.side)"
