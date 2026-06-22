@@ -8,6 +8,7 @@ import {
 } from 'ng-diagram';
 import { EdgeReshapeCommandDispatcher } from '../commands/dispatcher';
 import {
+  endpointNeighborAxis,
   getDefaultMinInteriorBends,
   getEdgePortOrientations,
   getNodePortOrientation,
@@ -22,6 +23,9 @@ interface PortSnapshot {
 }
 
 const samePoint = (a: Point, b: Point): boolean => a.x === b.x && a.y === b.y;
+
+const fmt = (points: readonly Point[]): string =>
+  '[' + points.map((p) => `(${Math.round(p.x)},${Math.round(p.y)})`).join(' ') + ']';
 
 const samePath = (a: readonly Point[], b: readonly Point[]): boolean => {
   if (a.length !== b.length) return false;
@@ -127,26 +131,39 @@ export class EdgeEndpointSyncService implements OnDestroy {
     }
 
     this.lastKnownPorts.set(edge.id, { source: sourcePos, target: targetPos });
-    if (!last) return;
+    if (!last) {
+      console.log(`[sync] edge=${edge.id} first-snapshot (no reflow this tick)`);
+      return;
+    }
 
-    const sourceOrientation = getNodePortOrientation(sourceNode, edge.sourcePort);
-    const targetOrientation = getNodePortOrientation(targetNode, edge.targetPort);
+    const portSourceOrientation = getNodePortOrientation(sourceNode, edge.sourcePort);
+    const portTargetOrientation = getNodePortOrientation(targetNode, edge.targetPort);
+    // Slide the endpoint along the stub's *actual* axis, not the port's — a
+    // reshaped wire can enter a horizontal port vertically (and vice versa).
+    // Using the port axis there forces a diagonal stub. Port axis is the
+    // fallback for a degenerate (collocated) stub.
+    const sourceAxis = endpointNeighborAxis(currentPoints, 'source') ?? portSourceOrientation;
+    const targetAxis = endpointNeighborAxis(currentPoints, 'target') ?? portTargetOrientation;
     let next: readonly Point[] = currentPoints;
 
     if (!samePoint(sourcePos, last.source)) {
-      const reflowed = reflowEndpoint(next, 'source', sourcePos, sourceOrientation);
+      const reflowed = reflowEndpoint(next, 'source', sourcePos, sourceAxis);
       if (reflowed) next = reflowed;
     }
     if (!samePoint(targetPos, last.target)) {
-      const reflowed = reflowEndpoint(next, 'target', targetPos, targetOrientation);
+      const reflowed = reflowEndpoint(next, 'target', targetPos, targetAxis);
       if (reflowed) next = reflowed;
     }
 
     const finalPoints = simplify
-      ? simplifyPath(next, sourceOrientation, targetOrientation, {
-          minInteriorBends: getDefaultMinInteriorBends(sourceOrientation, targetOrientation),
+      ? simplifyPath(next, portSourceOrientation, portTargetOrientation, {
+          minInteriorBends: getDefaultMinInteriorBends(portSourceOrientation, portTargetOrientation),
         })
       : next;
+
+    console.log(
+      `[sync] edge=${edge.id} dragging=${this.dragging} srcAxis=${sourceAxis} tgtAxis=${targetAxis} before=${fmt(currentPoints)} reflowed=${fmt(next)} final=${fmt(finalPoints)}`,
+    );
 
     if (samePath(finalPoints, currentPoints)) return;
 
