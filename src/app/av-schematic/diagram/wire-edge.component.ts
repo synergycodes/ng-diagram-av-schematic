@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  effect,
   inject,
   input,
   viewChild,
@@ -19,6 +20,7 @@ import {
 import { EdgeReshapeEventHandler } from './edge-reshaping/handlers/edge-reshape.handler';
 import { getHandlerPositions, type EdgeEndpointSide, type Orientation } from './edge-reshaping/logic';
 import { RelinkEndpointHandler } from './edge-relinking/relink-endpoint.handler';
+import { TempEdgePointsService } from './edge-linking/temp-edge-points.service';
 import { type WireEdgeData } from './model/interfaces';
 
 interface SegmentHandleView {
@@ -46,10 +48,24 @@ const handleTransform = (x: number, y: number, originX: number, originY: number)
 export class WireEdgeComponent implements NgDiagramEdgeTemplate<WireEdgeData> {
   private readonly reshapeHandler = inject(EdgeReshapeEventHandler);
   private readonly relinkHandler = inject(RelinkEndpointHandler);
+  private readonly tempEdgePoints = inject(TempEdgePointsService);
 
   edge = input.required<Edge<WireEdgeData>>();
 
   private readonly baseEdge = viewChild(NgDiagramBaseEdgeComponent);
+
+  constructor() {
+    // While this is the link-draw preview, publish its rendered (routed) points
+    // so a drop-to-background can create a real edge with identical bends.
+    effect(() => {
+      const edge = this.edge();
+      if (!edge.temporary) return;
+      const points = this.baseEdge()?.points();
+      if (points && points.length >= 2) {
+        this.tempEdgePoints.publish(edge.source, edge.sourcePort, points);
+      }
+    });
+  }
 
   protected readonly strokeColor = computed(() =>
     this.edge().selected ? 'var(--av-color-accent)' : 'var(--av-color-wire-stroke)',

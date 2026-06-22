@@ -39,7 +39,7 @@ export const reshapeEdge = (
 
   const portSourceOrientation = getNodePortOrientation(sourceNode, edge?.sourcePort);
   const portTargetOrientation = getNodePortOrientation(targetNode, edge?.targetPort);
-  const grid = resolveEdgeGrid(diagramService, edge, sourceNode);
+  const grid = resolveEdgeGrid(diagramService, sourceNode);
 
   // A dangling end isn't port-driven, so its stub segment is free to snap.
   const sourceFree = !!edge && !edge.source;

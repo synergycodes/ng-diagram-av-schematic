@@ -1,4 +1,4 @@
-import type { Edge, NgDiagramService, Node, SnappingConfig } from 'ng-diagram';
+import type { NgDiagramService, Node, SnappingConfig } from 'ng-diagram';
 
 /**
  * Resolve the grid to apply to an edge by mirroring node-drag snap config: the
@@ -10,10 +10,9 @@ import type { Edge, NgDiagramService, Node, SnappingConfig } from 'ng-diagram';
  */
 export const resolveEdgeGrid = (
   diagramService: NgDiagramService,
-  edge: Edge | null | undefined,
   referenceNode: Node | undefined,
 ): { x: number; y: number } | undefined => {
-  if (!edge || !referenceNode) return undefined;
+  if (!referenceNode) return undefined;
 
   const snapping = diagramService.config()?.snapping as Partial<SnappingConfig> | undefined;
   if (!snapping?.shouldSnapDragForNode?.(referenceNode)) return undefined;

@@ -101,7 +101,7 @@ export class RelinkEndpointHandler {
     const refNode = refNodeId
       ? this.modelService.nodes().find((n) => n.id === refNodeId)
       : undefined;
-    return resolveEdgeGrid(this.diagramService, edge, refNode);
+    return resolveEdgeGrid(this.diagramService, refNode);
   }
 
   private leaveDangling(drag: RelinkState, position: Point): void {
