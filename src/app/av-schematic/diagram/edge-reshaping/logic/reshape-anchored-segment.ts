@@ -34,14 +34,18 @@ export const reshapeAnchoredSegment = (
     const origTarget = points[lastIndex];
     const elbow: Point =
       axis === 'horizontal' ? { x: origTarget.x, y: target } : { x: target, y: origTarget.y };
-    result = [...result.slice(0, lastIndex), elbow, { x: origTarget.x, y: origTarget.y }];
+    if (elbow.x !== origTarget.x || elbow.y !== origTarget.y) {
+      result = [...result.slice(0, lastIndex), elbow, { x: origTarget.x, y: origTarget.y }];
+    }
   }
 
   if (growAtSource) {
     const origSource = points[0];
     const elbow: Point =
       axis === 'horizontal' ? { x: origSource.x, y: target } : { x: target, y: origSource.y };
-    result = [{ x: origSource.x, y: origSource.y }, elbow, ...result.slice(1)];
+    if (elbow.x !== origSource.x || elbow.y !== origSource.y) {
+      result = [{ x: origSource.x, y: origSource.y }, elbow, ...result.slice(1)];
+    }
   }
 
   return result;

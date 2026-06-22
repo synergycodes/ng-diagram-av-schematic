@@ -71,6 +71,11 @@ describe('reshapeAnchoredSegment', () => {
     ]);
   });
 
+  it('does not grow a zero-length elbow when the segment has not moved', () => {
+    const result = reshapeAnchoredSegment(path, 2, 'horizontal', 40, true, true);
+    expect(result).toEqual(path);
+  });
+
   it('does not mutate the input', () => {
     const snapshot = path.map((p) => ({ ...p }));
     reshapeAnchoredSegment(path, 2, 'horizontal', 80, true, true);

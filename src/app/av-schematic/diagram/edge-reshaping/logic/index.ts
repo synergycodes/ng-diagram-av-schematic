@@ -1,10 +1,4 @@
-export {
-  type EdgeEndpointSide,
-  type Orientation,
-  type BendHandle,
-  type GhostHandle,
-  type HandlerPositions,
-} from './path-types';
+export { type EdgeEndpointSide, type Orientation, type SegmentHandle } from './path-types';
 export {
   ENDPOINT_OFFSET,
   ALIGNMENT_TOLERANCE,

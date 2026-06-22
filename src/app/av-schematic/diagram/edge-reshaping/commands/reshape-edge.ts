@@ -9,6 +9,7 @@ import {
 import {
   getDefaultMinInteriorBends,
   getNodePortOrientation,
+  segmentAxis,
   simplifyPath,
   snapToGrid,
 } from '../logic';
@@ -60,20 +61,35 @@ export const reshapeEdge = (
   const sourceNode = edge ? nodes.find((node) => node.id === edge.source) : undefined;
   const targetNode = edge ? nodes.find((node) => node.id === edge.target) : undefined;
 
-  const sourceOrientation = getNodePortOrientation(sourceNode, edge?.sourcePort);
-  const targetOrientation = getNodePortOrientation(targetNode, edge?.targetPort);
+  const portSourceOrientation = getNodePortOrientation(sourceNode, edge?.sourcePort);
+  const portTargetOrientation = getNodePortOrientation(targetNode, edge?.targetPort);
   const grid = gridForEdge(diagramService, edge, sourceNode);
+
+  // Parity-based snap/correct assume the path alternates from the source-exit
+  // axis. Growing a stub at the source flips that axis away from the port's, so
+  // derive it from the actual geometry (first segment) rather than the port. The
+  // port pair still decides the minimum bend count.
+  const pathSourceOrientation =
+    command.points.length >= 2
+      ? (segmentAxis(command.points[0], command.points[1]) ?? portSourceOrientation)
+      : portSourceOrientation;
 
   let points = command.points;
 
   if (command.finalize) {
-    points = simplifyPath(points, sourceOrientation, targetOrientation, {
-      minInteriorBends: getDefaultMinInteriorBends(sourceOrientation, targetOrientation),
+    points = simplifyPath(points, pathSourceOrientation, portTargetOrientation, {
+      minInteriorBends: getDefaultMinInteriorBends(portSourceOrientation, portTargetOrientation),
       gridSize: grid,
     });
   } else if (grid) {
-    points = snapToGrid(points, grid, sourceOrientation);
+    points = snapToGrid(points, grid, pathSourceOrientation);
   }
+
+  const fmt = (pts: Point[]): string =>
+    '[' + pts.map((p) => `(${Math.round(p.x)},${Math.round(p.y)})`).join(' ') + ']';
+  console.log(
+    `[reshape] command finalize=${command.finalize} pathOrient=${pathSourceOrientation} grid=${grid ? `${grid.x}x${grid.y}` : 'none'} in=${fmt(command.points)} out=${fmt(points)}`,
+  );
 
   modelService.updateEdge(command.edgeId, { points, routingMode: 'manual' });
 };

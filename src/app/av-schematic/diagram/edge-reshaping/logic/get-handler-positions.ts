@@ -1,29 +1,25 @@
 import { type Point } from 'ng-diagram';
+import { type SegmentHandle } from './path-types';
 import { segmentMidpoint } from './point-array';
-import { type BendHandle, type GhostHandle, type HandlerPositions } from './path-types';
+import { segmentAxis } from './segment-axis';
 
 /**
- * Computes the bend (vertex) and ghost (segment-midpoint) handle positions
- * for an orthogonal edge path. Bends sit at every interior vertex; ghosts sit
- * at the midpoint of every interior segment (segments 0 and last, which touch
- * the port stubs, get no ghost — there's no insert gesture there).
- *
- * Empty arrays for short paths so callers don't need to guard.
+ * One reshape handle per orthogonal segment, sitting at the segment midpoint.
+ * The axis is coordinate-derived (works for any port side); oblique or
+ * degenerate segments are skipped. End segments are included — dragging one
+ * grows a new segment off the anchored port. Empty for paths shorter than a
+ * single segment so callers don't need to guard.
  */
-export const getHandlerPositions = (points: readonly Point[]): HandlerPositions => {
-  if (points.length < 3) return { bends: [], ghosts: [] };
+export const getHandlerPositions = (points: readonly Point[]): SegmentHandle[] => {
+  const handles: SegmentHandle[] = [];
+  if (points.length < 2) return handles;
 
-  const bends: BendHandle[] = points.slice(1, -1).map((p, i) => ({
-    x: p.x,
-    y: p.y,
-    pointIndex: i + 1,
-  }));
-
-  const ghosts: GhostHandle[] = [];
-  for (let i = 1; i <= points.length - 3; i++) {
+  for (let i = 0; i < points.length - 1; i++) {
+    const axis = segmentAxis(points[i], points[i + 1]);
+    if (axis === null) continue;
     const mid = segmentMidpoint(points[i], points[i + 1]);
-    ghosts.push({ x: mid.x, y: mid.y, segmentIndex: i });
+    handles.push({ x: mid.x, y: mid.y, segmentIndex: i, axis });
   }
 
-  return { bends, ghosts };
+  return handles;
 };
