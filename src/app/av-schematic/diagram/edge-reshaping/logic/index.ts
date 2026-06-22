@@ -12,7 +12,6 @@ export {
   getEdgePortOrientations,
 } from './port-orientation';
 export { insertPoint, deletePoint, segmentMidpoint } from './point-array';
-export { moveBend } from './move-bend';
 export { moveSegment } from './move-segment';
 export { reshapeAnchoredSegment } from './reshape-anchored-segment';
 export { segmentAxis, endpointNeighborAxis, pathSourceOrientation } from './segment-axis';
@@ -25,5 +24,4 @@ export { correctPath } from './correct-path';
 export { simplifyPath, type SimplifyOptions } from './simplify-path';
 export { snapToGrid } from './snap-to-grid';
 export { getDefaultMinInteriorBends } from './get-default-min-interior-bends';
-export { insertCollocatedBends, type CollocatedInsertion } from './insert-collocated-bends';
 export { getPortFlowPosition } from './get-port-flow-position';
