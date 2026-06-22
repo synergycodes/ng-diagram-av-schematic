@@ -5,7 +5,12 @@ export {
   type GhostHandle,
   type HandlerPositions,
 } from './path-types';
-export { ENDPOINT_OFFSET, ALIGNMENT_TOLERANCE, MAX_SAFE_ITERATIONS } from './constants';
+export {
+  ENDPOINT_OFFSET,
+  ALIGNMENT_TOLERANCE,
+  MAX_SAFE_ITERATIONS,
+  POSITION_TOLERANCE,
+} from './constants';
 export { expectedSegmentOrientation, oppositeOrientation } from './expected-segment-orientation';
 export {
   portSideToOrientation,
@@ -14,6 +19,11 @@ export {
 } from './port-orientation';
 export { insertPoint, deletePoint, segmentMidpoint } from './point-array';
 export { moveBend } from './move-bend';
+export { moveSegment } from './move-segment';
+export { reshapeAnchoredSegment } from './reshape-anchored-segment';
+export { segmentAxis, endpointNeighborAxis } from './segment-axis';
+export { realignEndpointNeighbor } from './realign-endpoint-neighbor';
+export { orthogonalizePolyline } from './orthogonalize-polyline';
 export { reflowEndpoint } from './reflow-endpoint';
 export { getHandlerPositions } from './get-handler-positions';
 export { removeStraightSegments } from './remove-straight-segments';
