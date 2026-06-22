@@ -1,8 +1,10 @@
 import { Injectable, inject } from '@angular/core';
 import { NgDiagramModelService, NgDiagramViewportService, type Edge, type Point } from 'ng-diagram';
 import {
+  ALIGNMENT_TOLERANCE,
   getPortFlowPosition,
   orthogonalizePolyline,
+  removeStraightSegments,
   type EdgeEndpointSide,
 } from '../edge-reshaping/logic';
 
@@ -90,11 +92,16 @@ export class RelinkEndpointHandler {
     this.modelService.updateEdge(drag.edgeId, patch);
   }
 
-  /** Original path with the dragged endpoint moved to `position`, re-orthogonalised. */
+  /**
+   * Original path with the dragged endpoint moved to `position`, re-orthogonalised
+   * and collapsed. The collapse folds the collinear L-bend orthogonalize adds for
+   * the moved end — without it, every drag would split the second-to-last segment
+   * and the bends would accumulate.
+   */
   private pathWithEndpointAt(drag: RelinkState, position: Point): Point[] {
     const next = drag.originalPoints.map((p) => ({ x: p.x, y: p.y }));
     next[drag.side === 'source' ? 0 : next.length - 1] = { x: position.x, y: position.y };
-    return orthogonalizePolyline(next);
+    return removeStraightSegments(orthogonalizePolyline(next), ALIGNMENT_TOLERANCE);
   }
 
   private findPortNear(position: Point): PortHit | null {

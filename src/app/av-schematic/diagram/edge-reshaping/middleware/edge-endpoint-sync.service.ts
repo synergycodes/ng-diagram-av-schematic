@@ -135,8 +135,15 @@ export class EdgeEndpointSyncService implements OnDestroy {
       return;
     }
 
+    // Only a *connected* end tracks a moving node (or needs anchoring to its
+    // port on first sight). A dangling end's position changes via reshape /
+    // relink, NOT a node move — reacting to it here would fight those gestures
+    // (the relink flicker). First sight (`!last`) anchors connected ends so a
+    // manual edge authored with an approximate port point snaps onto its port.
+    const sourceMoved = sourceConnected && (!last || !samePoint(sourcePos, last.source));
+    const targetMoved = targetConnected && (!last || !samePoint(targetPos, last.target));
     this.lastKnownPorts.set(edge.id, { source: sourcePos, target: targetPos });
-    if (!last) return;
+    if (!sourceMoved && !targetMoved) return;
 
     const portSourceOrientation = getNodePortOrientation(sourceNode, edge.sourcePort);
     const portTargetOrientation = getNodePortOrientation(targetNode, edge.targetPort);
@@ -148,13 +155,11 @@ export class EdgeEndpointSyncService implements OnDestroy {
     const targetAxis = endpointNeighborAxis(currentPoints, 'target') ?? portTargetOrientation;
     let next: readonly Point[] = currentPoints;
 
-    // Only connected ends follow a moving node; a dangling end stays where the
-    // user left it (it moves only via reshape, which the command handles).
-    if (sourceConnected && !samePoint(sourcePos, last.source)) {
+    if (sourceMoved) {
       const reflowed = reflowEndpoint(next, 'source', sourcePos, sourceAxis);
       if (reflowed) next = reflowed;
     }
-    if (targetConnected && !samePoint(targetPos, last.target)) {
+    if (targetMoved) {
       const reflowed = reflowEndpoint(next, 'target', targetPos, targetAxis);
       if (reflowed) next = reflowed;
     }
