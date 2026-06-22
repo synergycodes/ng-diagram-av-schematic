@@ -17,13 +17,20 @@ import {
   type EdgeReshapePointerEvent,
 } from './edge-reshaping/directives/edge-reshape.directive';
 import { EdgeReshapeEventHandler } from './edge-reshaping/handlers/edge-reshape.handler';
-import { getHandlerPositions, type Orientation } from './edge-reshaping/logic';
+import { getHandlerPositions, type EdgeEndpointSide, type Orientation } from './edge-reshaping/logic';
+import { RelinkEndpointHandler } from './edge-relinking/relink-endpoint.handler';
 import { type WireEdgeData } from './model/interfaces';
 
 interface SegmentHandleView {
   id: string;
   segmentIndex: number;
   axis: Orientation;
+  transform: string;
+}
+
+interface EndpointHandleView {
+  id: string;
+  side: EdgeEndpointSide;
   transform: string;
 }
 
@@ -38,6 +45,7 @@ const handleTransform = (x: number, y: number, originX: number, originY: number)
 })
 export class WireEdgeComponent implements NgDiagramEdgeTemplate<WireEdgeData> {
   private readonly reshapeHandler = inject(EdgeReshapeEventHandler);
+  private readonly relinkHandler = inject(RelinkEndpointHandler);
 
   edge = input.required<Edge<WireEdgeData>>();
 
@@ -54,14 +62,12 @@ export class WireEdgeComponent implements NgDiagramEdgeTemplate<WireEdgeData> {
     const points = this.baseEdge()?.points();
     if (!points || points.length === 0) return [];
     const source = points[0];
-    const views = getHandlerPositions(points).map((handle) => ({
+    return getHandlerPositions(points).map((handle) => ({
       id: `segment-${handle.segmentIndex}`,
       segmentIndex: handle.segmentIndex,
       axis: handle.axis,
       transform: handleTransform(handle.x, handle.y, source.x, source.y),
     }));
-    console.log(`[reshape] handles ${views.map((v) => v.id).join(',')}`);
-    return views;
   });
 
   protected onSegmentStart(
@@ -96,5 +102,31 @@ export class WireEdgeComponent implements NgDiagramEdgeTemplate<WireEdgeData> {
     const points = this.baseEdge()?.points();
     if (!points) return;
     this.reshapeHandler.onRemoveSegmentRequest(this.edge().id, segmentIndex, points);
+  }
+
+  protected readonly endpointHandles = computed<EndpointHandleView[]>(() => {
+    if (!this.edge().selected) return [];
+    const points = this.baseEdge()?.points();
+    if (!points || points.length < 2) return [];
+    const source = points[0];
+    const target = points[points.length - 1];
+    return [
+      { id: 'endpoint-source', side: 'source' as const, transform: handleTransform(source.x, source.y, source.x, source.y) },
+      { id: 'endpoint-target', side: 'target' as const, transform: handleTransform(target.x, target.y, source.x, source.y) },
+    ];
+  });
+
+  protected onEndpointStart(event: EdgeReshapePointerEvent, side: EdgeEndpointSide): void {
+    const points = this.baseEdge()?.points();
+    if (!points) return;
+    this.relinkHandler.onEndpointStart(this.edge().id, side, points, event.pointerId);
+  }
+
+  protected onEndpointContinue(event: EdgeReshapePointerEvent): void {
+    this.relinkHandler.onEndpointContinue(event.clientX, event.clientY, event.pointerId);
+  }
+
+  protected onEndpointEnd(event: EdgeReshapePointerEvent): void {
+    this.relinkHandler.onEndpointEnd(event.clientX, event.clientY, event.pointerId);
   }
 }

@@ -38,4 +38,12 @@
       opacity: 1;
     }
   }
+
+  &--endpoint {
+    width: 10px;
+    height: 10px;
+    background: var(--ngd-node-bg-primary-default);
+    border: 2px solid var(--av-color-accent);
+    cursor: grab;
+  }
 }

@@ -9,7 +9,7 @@ import {
 import {
   getDefaultMinInteriorBends,
   getNodePortOrientation,
-  segmentAxis,
+  pathSourceOrientation as derivePathSourceOrientation,
   simplifyPath,
   snapToGrid,
 } from '../logic';
@@ -67,29 +67,27 @@ export const reshapeEdge = (
 
   // Parity-based snap/correct assume the path alternates from the source-exit
   // axis. Growing a stub at the source flips that axis away from the port's, so
-  // derive it from the actual geometry (first segment) rather than the port. The
-  // port pair still decides the minimum bend count.
-  const pathSourceOrientation =
-    command.points.length >= 2
-      ? (segmentAxis(command.points[0], command.points[1]) ?? portSourceOrientation)
-      : portSourceOrientation;
+  // derive it from the actual geometry rather than the port. The port pair
+  // still decides the minimum bend count.
+  const pathSource = derivePathSourceOrientation(command.points, portSourceOrientation);
 
   let points = command.points;
 
   if (command.finalize) {
-    points = simplifyPath(points, pathSourceOrientation, portTargetOrientation, {
+    points = simplifyPath(points, pathSource, portTargetOrientation, {
       minInteriorBends: getDefaultMinInteriorBends(portSourceOrientation, portTargetOrientation),
       gridSize: grid,
     });
   } else if (grid) {
-    points = snapToGrid(points, grid, pathSourceOrientation);
+    points = snapToGrid(points, grid, pathSource);
   }
 
-  const fmt = (pts: Point[]): string =>
-    '[' + pts.map((p) => `(${Math.round(p.x)},${Math.round(p.y)})`).join(' ') + ']';
-  console.log(
-    `[reshape] command finalize=${command.finalize} pathOrient=${pathSourceOrientation} grid=${grid ? `${grid.x}x${grid.y}` : 'none'} in=${fmt(command.points)} out=${fmt(points)}`,
-  );
+  // For a dangling end (no connected node) the endpoint *is* its stored
+  // position — keep it in sync or the model re-derives the old point and the
+  // loose end snaps back.
+  const update: Partial<Edge> = { points, routingMode: 'manual' };
+  if (edge && !edge.source && points.length > 0) update.sourcePosition = points[0];
+  if (edge && !edge.target && points.length > 0) update.targetPosition = points[points.length - 1];
 
-  modelService.updateEdge(command.edgeId, { points, routingMode: 'manual' });
+  modelService.updateEdge(command.edgeId, update);
 };

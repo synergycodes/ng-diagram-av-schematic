@@ -198,5 +198,14 @@ export const diagramModel: {
       targetPort: 'in',
       data: { type: 'wire', wireId: 'W-007', wireType: 'speaker' },
     },
+    {
+      id: 'wire-8',
+      type: EdgeTemplateType.WireEdge,
+      source: 'media-1',
+      sourcePort: 'audio-out',
+      target: 'mixer-1',
+      targetPort: 'mic-2',
+      data: { type: 'wire', wireId: 'W-008', wireType: 'audio' },
+    },
   ],
 };

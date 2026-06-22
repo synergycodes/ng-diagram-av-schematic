@@ -27,9 +27,6 @@ interface DragState {
 
 const fallbackOrientation: Orientation = 'horizontal';
 
-const fmt = (points: readonly Point[]): string =>
-  '[' + points.map((p) => `(${Math.round(p.x)},${Math.round(p.y)})`).join(' ') + ']';
-
 /**
  * Translates pointer-phase events from `EdgeReshapeDirective` into reshape
  * commands. Owns the in-flight drag state for the duration of a gesture.
@@ -52,7 +49,6 @@ export class EdgeReshapeEventHandler {
   private readonly dispatcher = inject(EdgeReshapeCommandDispatcher);
 
   private state: DragState | null = null;
-  private continueCount = 0;
 
   onSegmentStart(
     edgeId: string,
@@ -76,10 +72,6 @@ export class EdgeReshapeEventHandler {
       originalPoints: points.slice(),
       lastComputedPoints: points.slice(),
     };
-    this.continueCount = 0;
-    console.log(
-      `[reshape] start seg=${segmentIndex} axis=${axis} anchorS=${this.state.anchorSource} anchorT=${this.state.anchorTarget} orig=${fmt(points)}`,
-    );
     this.dispatcher.dispatch({ type: 'reshapeEdgeStart', edgeId });
   }
 
@@ -101,11 +93,6 @@ export class EdgeReshapeEventHandler {
     const anchored = this.anchorEndsToPorts(slid, drag.edgeId);
     const next = orthogonalizePolyline(anchored);
 
-    this.continueCount += 1;
-    console.log(
-      `[reshape] continue #${this.continueCount} target=${Math.round(target)} slid=${fmt(slid)} anchored=${fmt(anchored)} next=${fmt(next)}`,
-    );
-
     this.state = { ...drag, lastComputedPoints: next };
     this.dispatcher.dispatch({
       type: 'reshapeEdge',
@@ -118,8 +105,6 @@ export class EdgeReshapeEventHandler {
   onEnd(pointerId: number): void {
     const drag = this.dragFor(pointerId);
     if (!drag) return;
-
-    console.log(`[reshape] end after ${this.continueCount} moves final=${fmt(drag.lastComputedPoints)}`);
 
     this.dispatcher.dispatch({
       type: 'reshapeEdge',

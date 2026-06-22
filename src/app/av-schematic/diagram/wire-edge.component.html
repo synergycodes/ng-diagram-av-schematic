@@ -19,4 +19,17 @@
       ></span>
     </ng-diagram-base-edge-label>
   }
+
+  @for (endpoint of endpointHandles(); track endpoint.id) {
+    <ng-diagram-base-edge-label [id]="endpoint.id" [positionOnEdge]="'0px'">
+      <span
+        class="bend-handle bend-handle--endpoint"
+        [style.transform]="endpoint.transform"
+        appEdgeReshape
+        (reshapeStart)="onEndpointStart($event, endpoint.side)"
+        (reshapeContinue)="onEndpointContinue($event)"
+        (reshapeEnd)="onEndpointEnd($event)"
+      ></span>
+    </ng-diagram-base-edge-label>
+  }
 </ng-diagram-base-edge>

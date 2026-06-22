@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { provideNgDiagram } from 'ng-diagram';
 import { DiagramComponent } from '../diagram/diagram.component';
+import { RelinkEndpointHandler } from '../diagram/edge-relinking/relink-endpoint.handler';
 import { EdgeReshapeCommandDispatcher } from '../diagram/edge-reshaping/commands/dispatcher';
 import { EdgeReshapeEventHandler } from '../diagram/edge-reshaping/handlers/edge-reshape.handler';
 import {
@@ -50,6 +51,7 @@ import { TopNavbarComponent } from '../top-navbar/top-navbar.component';
     EdgeReshapeCommandDispatcher,
     EdgeReshapeEventHandler,
     EdgeEndpointSyncService,
+    RelinkEndpointHandler,
   ],
 })
 export class AvSchematicPageComponent {

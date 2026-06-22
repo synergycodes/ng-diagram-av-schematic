@@ -13,6 +13,7 @@ import {
   getEdgePortOrientations,
   getNodePortOrientation,
   getPortFlowPosition,
+  pathSourceOrientation,
   reflowEndpoint,
   simplifyPath,
 } from '../logic';
@@ -23,9 +24,6 @@ interface PortSnapshot {
 }
 
 const samePoint = (a: Point, b: Point): boolean => a.x === b.x && a.y === b.y;
-
-const fmt = (points: readonly Point[]): string =>
-  '[' + points.map((p) => `(${Math.round(p.x)},${Math.round(p.y)})`).join(' ') + ']';
 
 const samePath = (a: readonly Point[], b: readonly Point[]): boolean => {
   if (a.length !== b.length) return false;
@@ -117,12 +115,19 @@ export class EdgeEndpointSyncService implements OnDestroy {
     const currentPoints = edge.points;
     if (!currentPoints) return;
 
-    const sourceNode = nodes.find((node) => node.id === edge.source);
-    const targetNode = nodes.find((node) => node.id === edge.target);
-    if (!sourceNode || !targetNode) return;
+    const sourceConnected = !!edge.source;
+    const targetConnected = !!edge.target;
+    const sourceNode = sourceConnected ? nodes.find((node) => node.id === edge.source) : undefined;
+    const targetNode = targetConnected ? nodes.find((node) => node.id === edge.target) : undefined;
+    if ((sourceConnected && !sourceNode) || (targetConnected && !targetNode)) return;
 
-    const sourcePos = getPortFlowPosition(sourceNode, edge.sourcePort);
-    const targetPos = getPortFlowPosition(targetNode, edge.targetPort);
+    // A dangling end has no port — its endpoint is its stored position.
+    const sourcePos = sourceNode
+      ? getPortFlowPosition(sourceNode, edge.sourcePort)
+      : (edge.sourcePosition ?? currentPoints[0]);
+    const targetPos = targetNode
+      ? getPortFlowPosition(targetNode, edge.targetPort)
+      : (edge.targetPosition ?? currentPoints[currentPoints.length - 1]);
     if (!sourcePos || !targetPos) return;
 
     const last = this.lastKnownPorts.get(edge.id);
@@ -131,10 +136,7 @@ export class EdgeEndpointSyncService implements OnDestroy {
     }
 
     this.lastKnownPorts.set(edge.id, { source: sourcePos, target: targetPos });
-    if (!last) {
-      console.log(`[sync] edge=${edge.id} first-snapshot (no reflow this tick)`);
-      return;
-    }
+    if (!last) return;
 
     const portSourceOrientation = getNodePortOrientation(sourceNode, edge.sourcePort);
     const portTargetOrientation = getNodePortOrientation(targetNode, edge.targetPort);
@@ -146,24 +148,22 @@ export class EdgeEndpointSyncService implements OnDestroy {
     const targetAxis = endpointNeighborAxis(currentPoints, 'target') ?? portTargetOrientation;
     let next: readonly Point[] = currentPoints;
 
-    if (!samePoint(sourcePos, last.source)) {
+    // Only connected ends follow a moving node; a dangling end stays where the
+    // user left it (it moves only via reshape, which the command handles).
+    if (sourceConnected && !samePoint(sourcePos, last.source)) {
       const reflowed = reflowEndpoint(next, 'source', sourcePos, sourceAxis);
       if (reflowed) next = reflowed;
     }
-    if (!samePoint(targetPos, last.target)) {
+    if (targetConnected && !samePoint(targetPos, last.target)) {
       const reflowed = reflowEndpoint(next, 'target', targetPos, targetAxis);
       if (reflowed) next = reflowed;
     }
 
     const finalPoints = simplify
-      ? simplifyPath(next, portSourceOrientation, portTargetOrientation, {
+      ? simplifyPath(next, pathSourceOrientation(next, portSourceOrientation), portTargetOrientation, {
           minInteriorBends: getDefaultMinInteriorBends(portSourceOrientation, portTargetOrientation),
         })
       : next;
-
-    console.log(
-      `[sync] edge=${edge.id} dragging=${this.dragging} srcAxis=${sourceAxis} tgtAxis=${targetAxis} before=${fmt(currentPoints)} reflowed=${fmt(next)} final=${fmt(finalPoints)}`,
-    );
 
     if (samePath(finalPoints, currentPoints)) return;
 
@@ -186,9 +186,12 @@ export class EdgeEndpointSyncService implements OnDestroy {
       if (!draggedIds.has(edge.source) && !draggedIds.has(edge.target)) continue;
 
       const orientations = getEdgePortOrientations(nodes, edge);
-      const simplified = simplifyPath(edge.points, orientations.source, orientations.target, {
-        minInteriorBends: getDefaultMinInteriorBends(orientations.source, orientations.target),
-      });
+      const simplified = simplifyPath(
+        edge.points,
+        pathSourceOrientation(edge.points, orientations.source),
+        orientations.target,
+        { minInteriorBends: getDefaultMinInteriorBends(orientations.source, orientations.target) },
+      );
 
       if (samePath(simplified, edge.points)) continue;
       this.dispatcher.dispatch({

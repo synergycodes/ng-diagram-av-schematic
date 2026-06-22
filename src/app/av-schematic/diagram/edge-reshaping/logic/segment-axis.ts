@@ -26,3 +26,16 @@ export const endpointNeighborAxis = (
   const neighborIndex = side === 'source' ? 1 : points.length - 2;
   return segmentAxis(points[endIndex], points[neighborIndex]);
 };
+
+/**
+ * The orientation to feed parity-based passes (`correctPath`, `snapToGrid`):
+ * the actual axis of the first segment, not the source port's. A wire grown at
+ * the source exits perpendicular to its port, so the port axis is wrong there;
+ * the first segment's coordinate-derived axis is always right for a clean
+ * orthogonal path. Falls back to `fallback` (the port axis) for a degenerate
+ * first segment.
+ */
+export const pathSourceOrientation = (
+  points: readonly Point[],
+  fallback: Orientation,
+): Orientation => (points.length >= 2 ? (segmentAxis(points[0], points[1]) ?? fallback) : fallback);

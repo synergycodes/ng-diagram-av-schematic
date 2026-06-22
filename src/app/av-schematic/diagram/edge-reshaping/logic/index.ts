@@ -15,7 +15,7 @@ export { insertPoint, deletePoint, segmentMidpoint } from './point-array';
 export { moveBend } from './move-bend';
 export { moveSegment } from './move-segment';
 export { reshapeAnchoredSegment } from './reshape-anchored-segment';
-export { segmentAxis, endpointNeighborAxis } from './segment-axis';
+export { segmentAxis, endpointNeighborAxis, pathSourceOrientation } from './segment-axis';
 export { realignEndpointNeighbor } from './realign-endpoint-neighbor';
 export { orthogonalizePolyline } from './orthogonalize-polyline';
 export { reflowEndpoint } from './reflow-endpoint';
