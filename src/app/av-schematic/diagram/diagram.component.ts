@@ -69,6 +69,7 @@ export class DiagramComponent {
     linking: {
       temporaryEdgeDataBuilder: (edge: Edge): Edge<WireEdgeData> => ({
         ...edge,
+        ...this.snapTemporaryTarget(edge),
         type: EdgeTemplateType.WireEdge,
         routing: 'orthogonal',
         sourceArrowhead: undefined,
@@ -111,6 +112,17 @@ export class DiagramComponent {
 
   onEdgeDrawEnded(event: EdgeDrawEndedEvent): void {
     this.linkDangling.handleEdgeDrawEnded(event);
+  }
+
+  private snapTemporaryTarget(edge: Edge): Pick<Edge, 'targetPosition'> | undefined {
+    if (!this.avConfig.snapping.enabled || edge.target || !edge.targetPosition) return undefined;
+    const grid = this.avConfig.snapping.gridSize;
+    return {
+      targetPosition: {
+        x: Math.round(edge.targetPosition.x / grid) * grid,
+        y: Math.round(edge.targetPosition.y / grid) * grid,
+      },
+    };
   }
 
   onSelectionGestureEnded(event: SelectionGestureEndedEvent): void {

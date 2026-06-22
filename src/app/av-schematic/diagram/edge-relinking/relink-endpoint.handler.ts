@@ -94,13 +94,13 @@ export class RelinkEndpointHandler {
 
   private gridForEdge(edgeId: string): { x: number; y: number } | undefined {
     const edge = this.modelService.getEdgeById(edgeId);
-    // Snap reference is whichever end is connected to a node.
+    const nodes = this.modelService.nodes();
+    // Snap reference is whichever end is connected; snap is global, so a
+    // fully-dangling edge falls back to any node so it still snaps.
     let refNodeId = '';
     if (edge?.source) refNodeId = edge.source;
     else if (edge?.target) refNodeId = edge.target;
-    const refNode = refNodeId
-      ? this.modelService.nodes().find((n) => n.id === refNodeId)
-      : undefined;
+    const refNode = refNodeId ? nodes.find((n) => n.id === refNodeId) : nodes[0];
     return resolveEdgeGrid(this.diagramService, refNode);
   }
 

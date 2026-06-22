@@ -10,6 +10,8 @@ import { resolveEdgeGrid, snapPointToGrid } from '../edge-reshaping/edge-grid';
 import {
   getNodePortOrientation,
   getPortFlowPosition,
+  pathSourceOrientation,
+  snapToGrid,
   POSITION_TOLERANCE,
 } from '../edge-reshaping/logic';
 import { EdgeTemplateType, type WireEdgeData } from '../model/interfaces';
@@ -42,7 +44,18 @@ export class LinkDanglingService {
     // Prefer the preview's own rendered points so the created edge keeps its
     // exact bends; fall back to a simple stub if none were captured.
     const preview = this.tempEdgePoints.take(event.source.id, event.sourcePort);
-    const points = preview ?? this.stubPath(sourceNode, event.sourcePort, start, event.dropPosition);
+    const rawPoints = preview ?? this.stubPath(sourceNode, event.sourcePort, start, event.dropPosition);
+
+    // Grid-snap the persisted path; the dangling target end is free so it snaps.
+    const grid = resolveEdgeGrid(this.diagramService, sourceNode);
+    const points = grid
+      ? snapToGrid(
+          rawPoints,
+          grid,
+          pathSourceOrientation(rawPoints, getNodePortOrientation(sourceNode, event.sourcePort)),
+          { targetFree: true },
+        )
+      : rawPoints;
 
     this.modelService.addEdges([
       {
