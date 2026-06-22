@@ -10,6 +10,8 @@ export interface SimplifyOptions {
   endpointOffset: number;
   minInteriorBends: number;
   gridSize?: { x: number; y: number };
+  sourceFree?: boolean;
+  targetFree?: boolean;
 }
 
 const defaults: SimplifyOptions = {
@@ -52,7 +54,11 @@ export const simplifyPath = (
     const candidate = removedInterior >= opts.minInteriorBends ? removed : current;
 
     let next = correctPath(candidate, sourceOrientation, targetOrientation, opts.endpointOffset);
-    if (opts.gridSize) next = snapToGrid(next, opts.gridSize, sourceOrientation);
+    if (opts.gridSize)
+      next = snapToGrid(next, opts.gridSize, sourceOrientation, {
+        sourceFree: opts.sourceFree,
+        targetFree: opts.targetFree,
+      });
 
     if (samePath(next, current) && next.length === previousLength) return next;
     current = next;

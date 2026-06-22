@@ -2,10 +2,9 @@ import {
   type Edge,
   type NgDiagramModelService,
   type NgDiagramService,
-  type Node,
   type Point,
-  type SnappingConfig,
 } from 'ng-diagram';
+import { resolveEdgeGrid } from '../edge-grid';
 import {
   getDefaultMinInteriorBends,
   getNodePortOrientation,
@@ -20,29 +19,6 @@ export interface ReshapeEdgeCommand {
   points: Point[];
   finalize: boolean;
 }
-
-/**
- * Resolve the grid to apply to this edge by mirroring node-drag snap config:
- * the edge snaps only when the source node would snap on drag. Uses the
- * source node's per-node `computeSnapForNodeDrag` when defined, falling back
- * to `defaultDragSnap`. With the ng-diagram defaults (`shouldSnapDragForNode:
- * () => false`) no snap fires — so a user has to opt in by enabling node-drag
- * snap, and the edge follows the same opt-in.
- */
-const gridForEdge = (
-  diagramService: NgDiagramService,
-  edge: Edge | null | undefined,
-  sourceNode: Node | undefined,
-): { x: number; y: number } | undefined => {
-  if (!edge || !sourceNode) return undefined;
-
-  const snapping = diagramService.config()?.snapping as Partial<SnappingConfig> | undefined;
-  if (!snapping?.shouldSnapDragForNode?.(sourceNode)) return undefined;
-
-  const snap = snapping.computeSnapForNodeDrag?.(sourceNode) ?? snapping.defaultDragSnap;
-  if (!snap?.width || !snap.height) return undefined;
-  return { x: snap.width, y: snap.height };
-};
 
 /**
  * Writes the new path to the model. Constraints applied:
@@ -63,7 +39,11 @@ export const reshapeEdge = (
 
   const portSourceOrientation = getNodePortOrientation(sourceNode, edge?.sourcePort);
   const portTargetOrientation = getNodePortOrientation(targetNode, edge?.targetPort);
-  const grid = gridForEdge(diagramService, edge, sourceNode);
+  const grid = resolveEdgeGrid(diagramService, edge, sourceNode);
+
+  // A dangling end isn't port-driven, so its stub segment is free to snap.
+  const sourceFree = !!edge && !edge.source;
+  const targetFree = !!edge && !edge.target;
 
   // Parity-based snap/correct assume the path alternates from the source-exit
   // axis. Growing a stub at the source flips that axis away from the port's, so
@@ -77,9 +57,11 @@ export const reshapeEdge = (
     points = simplifyPath(points, pathSource, portTargetOrientation, {
       minInteriorBends: getDefaultMinInteriorBends(portSourceOrientation, portTargetOrientation),
       gridSize: grid,
+      sourceFree,
+      targetFree,
     });
   } else if (grid) {
-    points = snapToGrid(points, grid, pathSource);
+    points = snapToGrid(points, grid, pathSource, { sourceFree, targetFree });
   }
 
   // For a dangling end (no connected node) the endpoint *is* its stored

@@ -101,6 +101,41 @@ describe('snapToGrid', () => {
     });
   });
 
+  describe('dangling (free) ends', () => {
+    it('snaps a dangling target stub that would otherwise be left aligned', () => {
+      const path = [
+        { x: 3, y: 7 },
+        { x: 78, y: 7 },
+        { x: 78, y: 213 },
+      ];
+      const result = snapToGrid(path, grid, 'horizontal', { targetFree: true });
+      // last (vertical) segment's shared x snaps; endpoint is no longer pinned
+      expect(result[1].x).toBe(80);
+      expect(result[2].x).toBe(80);
+    });
+
+    it('leaves a connected end alone while snapping the dangling end', () => {
+      const path = [
+        { x: 3, y: 7 },
+        { x: 78, y: 7 },
+        { x: 78, y: 213 },
+      ];
+      const result = snapToGrid(path, grid, 'horizontal', { targetFree: true });
+      expect(result[0]).toEqual({ x: 3, y: 7 });
+    });
+
+    it('snaps a dangling source stub', () => {
+      const path = [
+        { x: 3, y: 7 },
+        { x: 3, y: 78 },
+        { x: 197, y: 78 },
+      ];
+      const result = snapToGrid(path, grid, 'vertical', { sourceFree: true });
+      expect(result[0].x).toBe(0);
+      expect(result[1].x).toBe(0);
+    });
+  });
+
   it('does not mutate the input', () => {
     const path = [
       { x: 3, y: 7 },

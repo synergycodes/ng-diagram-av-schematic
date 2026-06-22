@@ -1,5 +1,12 @@
 import { Injectable, inject } from '@angular/core';
-import { NgDiagramModelService, NgDiagramViewportService, type Edge, type Point } from 'ng-diagram';
+import {
+  NgDiagramModelService,
+  NgDiagramService,
+  NgDiagramViewportService,
+  type Edge,
+  type Point,
+} from 'ng-diagram';
+import { resolveEdgeGrid, snapPointToGrid } from '../edge-reshaping/edge-grid';
 import {
   ALIGNMENT_TOLERANCE,
   getPortFlowPosition,
@@ -13,6 +20,7 @@ interface RelinkState {
   side: EdgeEndpointSide;
   pointerId: number;
   originalPoints: readonly Point[];
+  grid?: { x: number; y: number };
 }
 
 interface PortHit {
@@ -40,6 +48,7 @@ const SNAP_TO_PORT_PX = 24;
 export class RelinkEndpointHandler {
   private readonly viewport = inject(NgDiagramViewportService);
   private readonly modelService = inject(NgDiagramModelService);
+  private readonly diagramService = inject(NgDiagramService);
 
   private state: RelinkState | null = null;
 
@@ -50,26 +59,49 @@ export class RelinkEndpointHandler {
     pointerId: number,
   ): void {
     if (points.length < 2) return;
-    this.state = { edgeId, side, pointerId, originalPoints: points.slice() };
+    this.state = {
+      edgeId,
+      side,
+      pointerId,
+      originalPoints: points.slice(),
+      grid: this.gridForEdge(edgeId),
+    };
   }
 
   onEndpointContinue(clientX: number, clientY: number, pointerId: number): void {
     if (this.state?.pointerId !== pointerId) return;
-    const flow = this.viewport.clientToFlowPosition({ x: clientX, y: clientY });
-    this.leaveDangling(this.state, flow);
+    this.leaveDangling(this.state, this.danglingPosition(this.state, clientX, clientY));
   }
 
   onEndpointEnd(clientX: number, clientY: number, pointerId: number): void {
     if (this.state?.pointerId !== pointerId) return;
     const drag = this.state;
-    const flow = this.viewport.clientToFlowPosition({ x: clientX, y: clientY });
-    const hit = this.findPortNear(flow);
+    const rawFlow = this.viewport.clientToFlowPosition({ x: clientX, y: clientY });
+    const hit = this.findPortNear(rawFlow);
     if (hit) {
       this.connect(drag, hit);
     } else {
-      this.leaveDangling(drag, flow);
+      this.leaveDangling(drag, this.danglingPosition(drag, clientX, clientY));
     }
     this.state = null;
+  }
+
+  /** Cursor in flow coords, snapped to grid when snap is enabled for the edge. */
+  private danglingPosition(drag: RelinkState, clientX: number, clientY: number): Point {
+    const flow = this.viewport.clientToFlowPosition({ x: clientX, y: clientY });
+    return drag.grid ? snapPointToGrid(flow, drag.grid) : flow;
+  }
+
+  private gridForEdge(edgeId: string): { x: number; y: number } | undefined {
+    const edge = this.modelService.getEdgeById(edgeId);
+    // Snap reference is whichever end is connected to a node.
+    let refNodeId = '';
+    if (edge?.source) refNodeId = edge.source;
+    else if (edge?.target) refNodeId = edge.target;
+    const refNode = refNodeId
+      ? this.modelService.nodes().find((n) => n.id === refNodeId)
+      : undefined;
+    return resolveEdgeGrid(this.diagramService, edge, refNode);
   }
 
   private leaveDangling(drag: RelinkState, position: Point): void {
