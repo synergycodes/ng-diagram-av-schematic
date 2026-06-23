@@ -55,7 +55,12 @@ export const reshapeEdge = (
 
   if (command.finalize) {
     points = simplifyPath(points, pathSource, portTargetOrientation, {
-      minInteriorBends: getDefaultMinInteriorBends(portSourceOrientation, portTargetOrientation),
+      minInteriorBends: getDefaultMinInteriorBends(
+        portSourceOrientation,
+        portTargetOrientation,
+        points[0],
+        points[points.length - 1],
+      ),
       gridSize: grid,
       sourceFree,
       targetFree,

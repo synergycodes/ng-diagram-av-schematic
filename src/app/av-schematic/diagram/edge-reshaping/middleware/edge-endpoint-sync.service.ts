@@ -166,7 +166,12 @@ export class EdgeEndpointSyncService implements OnDestroy {
 
     const finalPoints = simplify
       ? simplifyPath(next, pathSourceOrientation(next, portSourceOrientation), portTargetOrientation, {
-          minInteriorBends: getDefaultMinInteriorBends(portSourceOrientation, portTargetOrientation),
+          minInteriorBends: getDefaultMinInteriorBends(
+            portSourceOrientation,
+            portTargetOrientation,
+            next[0],
+            next[next.length - 1],
+          ),
         })
       : next;
 
@@ -195,7 +200,14 @@ export class EdgeEndpointSyncService implements OnDestroy {
         edge.points,
         pathSourceOrientation(edge.points, orientations.source),
         orientations.target,
-        { minInteriorBends: getDefaultMinInteriorBends(orientations.source, orientations.target) },
+        {
+          minInteriorBends: getDefaultMinInteriorBends(
+            orientations.source,
+            orientations.target,
+            edge.points[0],
+            edge.points[edge.points.length - 1],
+          ),
+        },
       );
 
       if (samePath(simplified, edge.points)) continue;

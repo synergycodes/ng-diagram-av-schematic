@@ -127,7 +127,12 @@ export class EdgeReshapeEventHandler {
     if (segmentIndex < 1 || segmentIndex > points.length - 3) return;
 
     const orientations = this.orientationsFor(edgeId);
-    const minBends = getDefaultMinInteriorBends(orientations.source, orientations.target);
+    const minBends = getDefaultMinInteriorBends(
+      orientations.source,
+      orientations.target,
+      points[0],
+      points[points.length - 1],
+    );
     const remainingInteriorBends = points.length - 2 - 2;
     if (remainingInteriorBends < minBends) return;
 
