@@ -23,7 +23,10 @@ export const resolveEdgeGrid = (
 };
 
 /** Round a point to the nearest grid intersection. */
-export const snapPointToGrid = (point: { x: number; y: number }, grid: { x: number; y: number }) => ({
+export const snapPointToGrid = (
+  point: { x: number; y: number },
+  grid: { x: number; y: number },
+) => ({
   x: Math.round(point.x / grid.x) * grid.x,
   y: Math.round(point.y / grid.y) * grid.y,
 });

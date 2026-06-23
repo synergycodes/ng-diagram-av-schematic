@@ -41,7 +41,8 @@ export class LinkDanglingService {
     // Prefer the preview's own rendered points so the created edge keeps its
     // exact bends; fall back to a simple stub if none were captured.
     const preview = this.tempEdgePoints.take(event.source.id, event.sourcePort);
-    const rawPoints = preview ?? this.stubPath(sourceNode, event.sourcePort, start, event.dropPosition);
+    const rawPoints =
+      preview ?? this.stubPath(sourceNode, event.sourcePort, start, event.dropPosition);
 
     // Grid-snap the persisted path; the dangling target end is free so it snaps.
     const grid = resolveEdgeGrid(this.diagramService, sourceNode);

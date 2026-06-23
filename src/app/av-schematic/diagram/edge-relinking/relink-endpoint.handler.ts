@@ -6,7 +6,11 @@ import {
   type Edge,
   type Point,
 } from 'ng-diagram';
-import { edgeGridReferenceNode, resolveEdgeGrid, snapPointToGrid } from '../edge-reshaping/edge-grid';
+import {
+  edgeGridReferenceNode,
+  resolveEdgeGrid,
+  snapPointToGrid,
+} from '../edge-reshaping/edge-grid';
 import {
   ALIGNMENT_TOLERANCE,
   getPortFlowPosition,
@@ -112,8 +116,20 @@ export class RelinkEndpointHandler {
     const points = this.pathWithEndpointAt(drag, position);
     const patch: Partial<Edge> =
       drag.side === 'target'
-        ? { points, routingMode: 'manual', target: '', targetPort: undefined, targetPosition: position }
-        : { points, routingMode: 'manual', source: '', sourcePort: undefined, sourcePosition: position };
+        ? {
+            points,
+            routingMode: 'manual',
+            target: '',
+            targetPort: undefined,
+            targetPosition: position,
+          }
+        : {
+            points,
+            routingMode: 'manual',
+            source: '',
+            sourcePort: undefined,
+            sourcePosition: position,
+          };
     this.modelService.updateEdge(drag.edgeId, patch);
   }
 
@@ -132,8 +148,20 @@ export class RelinkEndpointHandler {
     const points = portPos ? this.pathWithEndpointAt(drag, portPos) : undefined;
     const patch: Partial<Edge> =
       drag.side === 'target'
-        ? { points, routingMode: 'manual', target: hit.nodeId, targetPort: hit.portId, targetPosition: undefined }
-        : { points, routingMode: 'manual', source: hit.nodeId, sourcePort: hit.portId, sourcePosition: undefined };
+        ? {
+            points,
+            routingMode: 'manual',
+            target: hit.nodeId,
+            targetPort: hit.portId,
+            targetPosition: undefined,
+          }
+        : {
+            points,
+            routingMode: 'manual',
+            source: hit.nodeId,
+            sourcePort: hit.portId,
+            sourcePosition: undefined,
+          };
     this.modelService.updateEdge(drag.edgeId, patch);
   }
 

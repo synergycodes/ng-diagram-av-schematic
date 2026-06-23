@@ -19,7 +19,11 @@ import {
   type EdgeReshapePointerEvent,
 } from './edge-reshaping/directives/edge-reshape.directive';
 import { EdgeReshapeEventHandler } from './edge-reshaping/handlers/edge-reshape.handler';
-import { getHandlerPositions, type EdgeEndpointSide, type Orientation } from './edge-reshaping/logic';
+import {
+  getHandlerPositions,
+  type EdgeEndpointSide,
+  type Orientation,
+} from './edge-reshaping/logic';
 import { RelinkEndpointHandler } from './edge-relinking/relink-endpoint.handler';
 import { TempEdgePointsService } from './edge-linking/temp-edge-points.service';
 import { type WireEdgeData } from './model/interfaces';
@@ -132,8 +136,16 @@ export class WireEdgeComponent implements NgDiagramEdgeTemplate<WireEdgeData> {
     const source = points[0];
     const target = points[points.length - 1];
     return [
-      { id: 'endpoint-source', side: 'source' as const, transform: handleTransform(source.x, source.y, source.x, source.y) },
-      { id: 'endpoint-target', side: 'target' as const, transform: handleTransform(target.x, target.y, source.x, source.y) },
+      {
+        id: 'endpoint-source',
+        side: 'source' as const,
+        transform: handleTransform(source.x, source.y, source.x, source.y),
+      },
+      {
+        id: 'endpoint-target',
+        side: 'target' as const,
+        transform: handleTransform(target.x, target.y, source.x, source.y),
+      },
     ];
   });
 
