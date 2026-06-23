@@ -136,10 +136,10 @@ export class EdgeEndpointSyncService implements OnDestroy {
     }
 
     // Only a *connected* end tracks a moving node (or needs anchoring to its
-    // port on first sight). A dangling end's position changes via reshape /
-    // relink, NOT a node move — reacting to it here would fight those gestures
-    // (the relink flicker). First sight (`!last`) anchors connected ends so a
-    // manual edge authored with an approximate port point snaps onto its port.
+    // port on first sight). A dangling end's position is owned by whatever
+    // gesture is editing it, NOT a node move — reacting to it here would fight
+    // that gesture. First sight (`!last`) anchors connected ends so a manual
+    // edge authored with an approximate port point snaps onto its port.
     const sourceMoved = sourceConnected && (!last || !samePoint(sourcePos, last.source));
     const targetMoved = targetConnected && (!last || !samePoint(targetPos, last.target));
     this.lastKnownPorts.set(edge.id, { source: sourcePos, target: targetPos });

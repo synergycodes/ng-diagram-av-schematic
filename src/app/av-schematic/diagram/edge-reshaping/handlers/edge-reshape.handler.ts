@@ -33,9 +33,8 @@ const fallbackOrientation: Orientation = 'horizontal';
  *
  * The drag slides one whole segment to follow the cursor (grab-offset
  * preserved via the start-pointer baseline), grows an L-bend off any anchored
- * port end, then re-anchors endpoints to their live ports and re-orthogonalizes
- * — the same per-move pipeline as the single-line-diagram reference. Segment
- * merging is deferred to drag end (`finalize`).
+ * port end, then re-anchors endpoints to their live ports and re-orthogonalizes.
+ * Segment merging is deferred to drag end (`finalize`).
  *
  * Porting target: when this lands inside ng-diagram, the inline `state`
  * field moves to `ActionStateManager.edgeReshape` so other parts of the

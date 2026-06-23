@@ -34,15 +34,11 @@ const SNAP_TO_PORT_PX = 24;
  * Drag either endpoint of a selected edge. During the drag the dragged end
  * follows the cursor; on drop it reconnects to the nearest port within
  * {@link SNAP_TO_PORT_PX}, or stays dangling (one free end) if dropped in empty
- * space. Mirrors single-line-diagram's relink (`RelinkBranch` attach /
- * leaveDangling), pared to ports-only attachment for this app.
+ * space.
  *
- * Unlike SLD, the edge is kept `routingMode: 'manual'` throughout: plain
- * orthogonal routing won't render a dangling end, so we build the orthogonal
- * path ourselves and let a dangling end live in the stored points.
- *
- * Porting target: an input-events handler + `relinkEdge` command in ng-diagram;
- * the port hit-test becomes a shared spatial lookup.
+ * The edge is kept `routingMode: 'manual'` throughout: plain orthogonal routing
+ * won't render a dangling end, so we build the orthogonal path ourselves and
+ * let a dangling end live in the stored points.
  */
 @Injectable()
 export class RelinkEndpointHandler {

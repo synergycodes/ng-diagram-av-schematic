@@ -23,9 +23,6 @@ import { TempEdgePointsService } from './temp-edge-points.service';
  * draw that ends without a target; on that `edgeDrawEnded` we add a one-end
  * edge from the source port to the drop point, routed orthogonally so it
  * matches the live preview.
- *
- * Pared from single-line-diagram's `LinkDrawService`. Porting target: a linking
- * middleware in ng-diagram.
  */
 @Injectable()
 export class LinkDanglingService {

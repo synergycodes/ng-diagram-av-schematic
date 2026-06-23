@@ -9,7 +9,8 @@ import { POSITION_TOLERANCE } from './constants';
  *
  * Vertical-first matches the top/bottom-port convention; for this app's
  * horizontal, static-port edges it is effectively a no-op (segments arrive
- * already orthogonal), but it keeps the per-move pipeline identical to SLD.
+ * already orthogonal), but keeping it general means the pipeline ports
+ * unchanged to edges with any port orientation.
  */
 export const orthogonalizePolyline = (points: readonly Point[]): Point[] => {
   if (points.length < 2) return points.map((p) => ({ x: p.x, y: p.y }));
