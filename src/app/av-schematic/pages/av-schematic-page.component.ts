@@ -5,6 +5,7 @@ import { DiagramComponent } from '../diagram/diagram.component';
 import { LinkDanglingService } from '../diagram/edge-linking/link-dangling.service';
 import { TempEdgePointsService } from '../diagram/edge-linking/temp-edge-points.service';
 import { RelinkEndpointHandler } from '../diagram/edge-relinking/relink-endpoint.handler';
+import { RelinkTargetHighlightService } from '../diagram/edge-relinking/relink-target-highlight.service';
 import { EdgeReshapeCommandDispatcher } from '../diagram/edge-reshaping/commands/dispatcher';
 import { EdgeReshapeEventHandler } from '../diagram/edge-reshaping/handlers/edge-reshape.handler';
 import {
@@ -54,6 +55,7 @@ import { TopNavbarComponent } from '../top-navbar/top-navbar.component';
     EdgeReshapeEventHandler,
     EdgeEndpointSyncService,
     RelinkEndpointHandler,
+    RelinkTargetHighlightService,
     LinkDanglingService,
     TempEdgePointsService,
   ],

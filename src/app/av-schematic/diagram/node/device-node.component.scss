@@ -12,7 +12,8 @@
     cursor: grabbing;
   }
 
-  &:hover {
+  &:hover,
+  &.is-link-target {
     --card-border-color: var(--av-color-selection-border);
   }
 
@@ -157,6 +158,11 @@
     background: color-mix(in srgb, var(--av-color-accent) 35%, transparent);
     border-color: var(--av-color-accent);
   }
+}
+
+.port-row.is-link-target .port-shape {
+  background: color-mix(in srgb, var(--av-color-accent) 35%, transparent);
+  border-color: var(--av-color-accent);
 }
 
 .port-info {

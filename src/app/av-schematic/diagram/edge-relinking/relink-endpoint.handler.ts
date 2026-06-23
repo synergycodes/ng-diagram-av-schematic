@@ -14,6 +14,7 @@ import {
   removeStraightSegments,
   type EdgeEndpointSide,
 } from '../edge-reshaping/logic';
+import { RelinkTargetHighlightService } from './relink-target-highlight.service';
 
 interface RelinkState {
   edgeId: string;
@@ -45,6 +46,7 @@ export class RelinkEndpointHandler {
   private readonly viewport = inject(NgDiagramViewportService);
   private readonly modelService = inject(NgDiagramModelService);
   private readonly diagramService = inject(NgDiagramService);
+  private readonly highlight = inject(RelinkTargetHighlightService);
 
   private state: RelinkState | null = null;
 
@@ -55,6 +57,7 @@ export class RelinkEndpointHandler {
     pointerId: number,
   ): void {
     if (points.length < 2) return;
+    this.highlight.clear();
     this.state = {
       edgeId,
       side,
@@ -66,14 +69,25 @@ export class RelinkEndpointHandler {
 
   onEndpointContinue(clientX: number, clientY: number, pointerId: number): void {
     if (this.state?.pointerId !== pointerId) return;
-    this.leaveDangling(this.state, this.danglingPosition(this.state, clientX, clientY));
+    const drag = this.state;
+    const hit = this.portHitAt(clientX, clientY);
+    if (hit) {
+      // Latch the preview onto the port and highlight it, mirroring the
+      // hover feedback ng-diagram shows while drawing a new edge.
+      this.highlight.set(hit.nodeId, hit.portId);
+      const portPos = this.portPosition(hit);
+      this.leaveDangling(drag, portPos ?? this.danglingPosition(drag, clientX, clientY));
+    } else {
+      this.highlight.clear();
+      this.leaveDangling(drag, this.danglingPosition(drag, clientX, clientY));
+    }
   }
 
   onEndpointEnd(clientX: number, clientY: number, pointerId: number): void {
     if (this.state?.pointerId !== pointerId) return;
     const drag = this.state;
-    const rawFlow = this.viewport.clientToFlowPosition({ x: clientX, y: clientY });
-    const hit = this.findPortNear(rawFlow);
+    this.highlight.clear();
+    const hit = this.portHitAt(clientX, clientY);
     if (hit) {
       this.connect(drag, hit);
     } else {
@@ -103,9 +117,18 @@ export class RelinkEndpointHandler {
     this.modelService.updateEdge(drag.edgeId, patch);
   }
 
-  private connect(drag: RelinkState, hit: PortHit): void {
+  private portHitAt(clientX: number, clientY: number): PortHit | null {
+    const flow = this.viewport.clientToFlowPosition({ x: clientX, y: clientY });
+    return this.findPortNear(flow);
+  }
+
+  private portPosition(hit: PortHit): Point | null {
     const node = this.modelService.nodes().find((n) => n.id === hit.nodeId);
-    const portPos = node ? getPortFlowPosition(node, hit.portId) : null;
+    return node ? getPortFlowPosition(node, hit.portId) : null;
+  }
+
+  private connect(drag: RelinkState, hit: PortHit): void {
+    const portPos = this.portPosition(hit);
     const points = portPos ? this.pathWithEndpointAt(drag, portPos) : undefined;
     const patch: Partial<Edge> =
       drag.side === 'target'
