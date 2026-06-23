@@ -1,4 +1,4 @@
-import type { NgDiagramService, Node, SnappingConfig } from 'ng-diagram';
+import type { Edge, NgDiagramService, Node, SnappingConfig } from 'ng-diagram';
 
 /**
  * Resolve the grid to apply to an edge by mirroring node-drag snap config: the
@@ -27,3 +27,18 @@ export const snapPointToGrid = (point: { x: number; y: number }, grid: { x: numb
   x: Math.round(point.x / grid.x) * grid.x,
   y: Math.round(point.y / grid.y) * grid.y,
 });
+
+/**
+ * Pick the node whose drag-snap config governs an edge's grid: a connected end
+ * if any, otherwise any node (snap is diagram-global, so a fully-dangling edge
+ * still snaps). The node dependency is the seam ng-diagram core should remove —
+ * edge snap there should be configurable independently of node-drag snap.
+ */
+export const edgeGridReferenceNode = (
+  nodes: readonly Node[],
+  edge: Edge | null | undefined,
+): Node | undefined => {
+  const connectedId = edge && (edge.source || edge.target);
+  const connected = connectedId ? nodes.find((node) => node.id === connectedId) : undefined;
+  return connected ?? nodes[0];
+};

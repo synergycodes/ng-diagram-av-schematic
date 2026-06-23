@@ -15,6 +15,7 @@ import {
   type SelectionGestureEndedEvent,
 } from 'ng-diagram';
 import { AV_SCHEMATIC_CONFIG } from '../av-schematic.config';
+import { snapPointToGrid } from './edge-reshaping/edge-grid';
 import { LinkDanglingService } from './edge-linking/link-dangling.service';
 import { DiagramExportService } from '../export/diagram-export.service';
 import { PropertiesSidebarService } from '../properties-sidebar/properties-sidebar.service';
@@ -116,13 +117,8 @@ export class DiagramComponent {
 
   private snapTemporaryTarget(edge: Edge): Pick<Edge, 'targetPosition'> | undefined {
     if (!this.avConfig.snapping.enabled || edge.target || !edge.targetPosition) return undefined;
-    const grid = this.avConfig.snapping.gridSize;
-    return {
-      targetPosition: {
-        x: Math.round(edge.targetPosition.x / grid) * grid,
-        y: Math.round(edge.targetPosition.y / grid) * grid,
-      },
-    };
+    const step = this.avConfig.snapping.gridSize;
+    return { targetPosition: snapPointToGrid(edge.targetPosition, { x: step, y: step }) };
   }
 
   onSelectionGestureEnded(event: SelectionGestureEndedEvent): void {

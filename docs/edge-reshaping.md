@@ -93,6 +93,12 @@ The drag baseline is the start-pointer position, so the grabbed segment keeps it
 
 ng-diagram has no edge-specific snap config, so manual edges reuse the node-drag snap (`resolveEdgeGrid`): an edge snaps when `snapping.shouldSnapDragForNode(referenceNode)` is true, with the same step. This template defaults `AvSchematicConfig.snapping.enabled` to `true` (`gridSize: 20`). Interior segments snap their shared coord; a dangling stub snaps too (`sourceFree`/`targetFree`); port-driven endpoints never snap.
 
+**Ports are grid-aligned by construction.** A snapped interior bend only lines up with a port stub (giving a straight, collapsible segment) if the port's own coordinate is already on the grid. Node positions in `data.ts` are multiples of `gridSize`, and the device-node template is sized so every port centre is too: the grid step is **half the port-row height** (the connector sits at the row's vertical centre, so `g = rowHeight / 2` is the coarsest step that lands every connector on a line). Concretely the row is `40px` and the header total `80px`, which makes `gridSize: 20` valid. **Changing the node header/row heights silently breaks snap alignment** unless the grid step stays half the row height and the header total stays a grid multiple — see `device-node.component.scss`.
+
+**Reference node.** The grid is resolved from a node's drag-snap config via `edgeGridReferenceNode` (connected end, else any node — snap is diagram-global). A fully-dangling edge has no connected node, hence the any-node fallback. This node dependency is the seam core should remove (edge snap configurable independently of node-drag snap).
+
+**Linking preview.** The live link-draw preview snaps its dragged endpoint in `temporaryEdgeDataBuilder` (unless it's within `portSnapDistance` of a real port); the created dangling edge re-snaps its whole path via `snapToGrid` with `targetFree`.
+
 ## Porting into ng-diagram
 
 The feature mirrors the resize/linking features so the move is mostly mechanical. Broadly:

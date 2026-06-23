@@ -4,7 +4,7 @@ import {
   type NgDiagramService,
   type Point,
 } from 'ng-diagram';
-import { resolveEdgeGrid } from '../edge-grid';
+import { edgeGridReferenceNode, resolveEdgeGrid } from '../edge-grid';
 import {
   getDefaultMinInteriorBends,
   getNodePortOrientation,
@@ -39,9 +39,7 @@ export const reshapeEdge = (
 
   const portSourceOrientation = getNodePortOrientation(sourceNode, edge?.sourcePort);
   const portTargetOrientation = getNodePortOrientation(targetNode, edge?.targetPort);
-  // Snap is global here, so a fully-dangling edge (no connected node) still
-  // snaps — fall back to any node as the reference.
-  const grid = resolveEdgeGrid(diagramService, sourceNode ?? targetNode ?? nodes[0]);
+  const grid = resolveEdgeGrid(diagramService, edgeGridReferenceNode(nodes, edge));
 
   // A dangling end isn't port-driven, so its stub segment is free to snap.
   const sourceFree = !!edge && !edge.source;
