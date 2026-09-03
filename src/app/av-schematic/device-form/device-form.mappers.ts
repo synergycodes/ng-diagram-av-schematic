@@ -56,6 +56,8 @@ export function formDataToDeviceData(
     model: formData.model,
     category: formData.category || undefined,
     location: formData.location || undefined,
-    ports: formData.ports,
+    // A footprint owns physical pin identity and placement owns hole mapping.
+    // The generic AV editor may change descriptive fields, but not those ports.
+    ports: existingData.footprintId !== undefined ? existingData.ports : formData.ports,
   };
 }

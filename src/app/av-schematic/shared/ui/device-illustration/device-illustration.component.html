@@ -1,0 +1,63 @@
+@if (illustration(); as illustrationId) {
+  <svg
+    viewBox="0 0 64 40"
+    [class]="'illustration illustration--' + illustrationId"
+    [attr.role]="decorative() ? null : 'img'"
+    [attr.aria-hidden]="decorative() ? 'true' : null"
+    [attr.aria-label]="decorative() ? null : label()"
+  >
+    @switch (illustrationId) {
+      @case ('arduino-nano') {
+        <rect class="board" x="12" y="2" width="40" height="36" rx="3" />
+        <rect class="metal" x="25" y="0.5" width="14" height="8" rx="1.5" />
+        <rect class="chip" x="25" y="14" width="14" height="14" rx="1.5" />
+        <path class="pins" d="M15 6h34M15 34h34" />
+        <circle class="led" cx="18" cy="11" r="2" />
+      }
+      @case ('raspberry-pi-4') {
+        <rect class="board" x="5" y="3" width="54" height="34" rx="4" />
+        <rect class="metal" x="5" y="9" width="12" height="10" rx="1" />
+        <rect class="metal" x="5" y="23" width="14" height="11" rx="1" />
+        <rect class="chip" x="27" y="17" width="13" height="12" rx="1" />
+        <rect class="header" x="22" y="5" width="34" height="6" rx="2" />
+        <path class="header-pins" d="M25 7.5h28M25 9.5h28" />
+        <circle class="mount" cx="53" cy="33" r="2.5" />
+      }
+      @case ('mpu6050') {
+        <rect class="board" x="8" y="3" width="48" height="34" rx="2" />
+        <path class="pins" d="M13 7h38" />
+        <rect class="chip" x="25" y="15" width="14" height="12" rx="1" />
+        <circle class="mount" cx="15" cy="31" r="3.5" />
+        <circle class="mount" cx="49" cy="31" r="3.5" />
+        <path class="axis" d="M43 27v-8m0 8 6-4m-6 4-5-4" />
+      }
+      @case ('tb6612fng') {
+        <rect class="board" x="9" y="4" width="46" height="32" rx="2" />
+        <path class="pins" d="M14 7h36M14 33h36" />
+        <rect class="chip" x="23" y="12" width="18" height="16" rx="1" />
+        <circle class="mark" cx="27" cy="16" r="1.5" />
+      }
+      @case ('lm2596s') {
+        <rect class="board" x="3" y="5" width="58" height="30" rx="2" />
+        <circle class="capacitor" cx="13" cy="22" r="6" />
+        <rect class="regulator" x="21" y="10" width="10" height="14" rx="1" />
+        <rect class="inductor" x="34" y="17" width="13" height="13" rx="3" />
+        <text class="inductor-label" x="40.5" y="26">470</text>
+        <circle class="capacitor" cx="54" cy="23" r="5" />
+        <rect class="trimmer" x="40" y="7" width="13" height="7" rx="1" />
+        <circle class="screw" cx="49" cy="10.5" r="2" />
+      }
+      @case ('hall-a3144') {
+        <rect class="board" x="3" y="9" width="58" height="22" rx="2" />
+        <rect class="sensor" x="6" y="14" width="7" height="12" rx="1" />
+        <rect class="chip" x="27" y="14" width="13" height="12" rx="1" />
+        <circle class="mount" cx="47" cy="20" r="3.5" />
+        @for (pinX of hallHeaderPinXs; track pinX) {
+          <line class="header-pins" [attr.x1]="pinX" y1="13" [attr.x2]="pinX" y2="27" />
+        }
+        <circle class="led" cx="20" cy="15" r="1.7" />
+        <circle class="led led--secondary" cx="20" cy="25" r="1.7" />
+      }
+    }
+  </svg>
+}

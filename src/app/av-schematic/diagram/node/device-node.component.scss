@@ -72,6 +72,14 @@
   text-align: center;
 }
 
+.device-node__header-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  min-width: 0;
+}
+
 .device-node__id {
   font-weight: 500;
   font-size: 14px;
@@ -189,4 +197,63 @@
   font-size: 10px;
   font-weight: 300;
   color: var(--ngd-txt-secondary-default);
+}
+
+// ---------------------------------------------------------------------------
+// Compact catalog illustration variant.
+//
+// Original, hand-authored reskin of the same generic card/port markup above
+// - no assets or code adapted from any third-party silkscreen/footprint
+// library. The six catalog components carry this layout; unknown manual
+// components keep rendering the plain generic card.
+//
+// The compact header drops the manufacturer line and lays out the illustration
+// and text in a row. Port labels remain the source of pin identity.
+// ---------------------------------------------------------------------------
+
+.device-node--illustrated {
+  --av-node-width: 104px;
+
+  .device-node__header {
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    gap: var(--ngd-primitive-4rule-4);
+    height: 26px;
+    padding: 0 var(--ngd-primitive-4rule-8);
+  }
+
+  .device-node__header-text {
+    align-items: flex-start;
+    gap: 0;
+  }
+
+  .device-node__id {
+    font-size: 9px;
+    line-height: 1.15;
+  }
+
+  .device-node__info {
+    font-size: 7px;
+    line-height: 1.15;
+  }
+
+  .port-row {
+    height: 18px;
+    padding: 1px var(--ngd-primitive-4rule-8);
+  }
+
+  .port-label {
+    font-size: 8px;
+  }
+
+  .port-connector-type {
+    font-size: 6px;
+  }
+}
+
+.device-node__illustration {
+  width: 24px;
+  height: 18px;
+  flex-shrink: 0;
 }

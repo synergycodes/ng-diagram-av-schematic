@@ -1,0 +1,53 @@
+<div class="wireviz-tools">
+  <label class="action-btn" [class.is-disabled]="isBusy()">
+    Importar YAML
+    <input
+      class="file-input"
+      type="file"
+      accept=".yml,.yaml,text/yaml,application/yaml,text/plain"
+      [disabled]="isBusy()"
+      (change)="importFile($event)"
+    />
+  </label>
+  <button type="button" class="action-btn" [disabled]="isBusy()" (click)="loadFixture()">
+    Fixture multi-drop
+  </button>
+  <button type="button" class="action-btn" [disabled]="isBusy()" (click)="exportWireViz()">
+    Exportar WireViz
+  </button>
+  <button
+    type="button"
+    class="report-btn"
+    [attr.aria-expanded]="reportOpen()"
+    (click)="toggleReport()"
+  >
+    Relatório ({{ entries().length }})
+  </button>
+
+  @if (reportOpen()) {
+    <section class="report-panel" aria-label="Relatório global de compatibilidade WireViz">
+      <div class="report-heading">
+        <strong>Relatório global</strong>
+        @if (message(); as text) {
+          <span [class.is-error]="status() === 'error'">{{ text }}</span>
+        }
+      </div>
+      @if (entries().length === 0) {
+        <p class="empty-report">Nenhum aviso de compatibilidade nesta operação.</p>
+      } @else {
+        <ol class="report-list">
+          @for (entry of entries(); track entry.severity + entry.code + entry.path + $index) {
+            <li
+              [class.is-warning]="entry.severity === 'warning'"
+              [class.is-error]="entry.severity === 'error'"
+            >
+              <code>{{ entry.code }}</code>
+              <span>{{ entry.path }}</span>
+              <p>{{ entry.message }}</p>
+            </li>
+          }
+        </ol>
+      }
+    </section>
+  }
+</div>

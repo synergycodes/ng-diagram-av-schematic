@@ -13,8 +13,8 @@
 }
 
 // Segment reshape handle. Idle: two accent grip bars parallel to the segment,
-// hugging the wire. Hover/drag: a double-arrow showing the drag axis (↕ for a
-// horizontal segment, ↔ for a vertical one).
+// hugging the wire. Hover/drag: a double-arrow showing the drag axis (vertical for a
+// horizontal segment, horizontal for a vertical one).
 .reshape-overlay__handle {
   position: absolute;
   width: 22px;
@@ -42,8 +42,8 @@
     transition: opacity 0.1s ease;
   }
 
-  // Each bar is centred on the midpoint (translate -50%/-50%), then nudged
-  // ±5px perpendicular — so the wire passes exactly between the pair.
+  // Each bar is centered on the midpoint (translate -50%/-50%), then nudged
+  // 5 px in opposite perpendicular directions so the wire passes between them.
   &.is-horizontal::before,
   &.is-horizontal::after {
     top: 50%;
@@ -72,7 +72,7 @@
     transform: translate(-50%, -50%) translateX(5px);
   }
 
-  // Drag-direction arrow — hidden until hover / drag.
+  // Drag-direction arrow -- hidden until hover / drag.
   .reshape-overlay__arrow {
     position: absolute;
     inset: 0;
@@ -84,12 +84,13 @@
     // Halo keeps the arrow legible over the selected wire.
     filter: drop-shadow(0 0 1.5px var(--ngd-node-bg-primary-default));
   }
-  // Vertical segment drags horizontally → rotate the ↕ glyph to ↔.
+  // Vertical segment drags horizontally -> rotate the vertical glyph to horizontal.
   &.is-vertical .reshape-overlay__arrow {
     transform: rotate(90deg);
   }
 
   &:hover,
+  &:focus-visible,
   &.is-dragging {
     &::before,
     &::after {
@@ -99,5 +100,36 @@
     .reshape-overlay__arrow {
       opacity: 1;
     }
+  }
+}
+
+// Bend (waypoint) handle: a small square knot sitting on an interior vertex.
+// Square, so it reads as "a corner of the route" next to the round relink
+// endpoint rings -- drag to move it, double-click to delete it.
+.reshape-overlay__bend {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  box-sizing: border-box;
+  border-radius: 2px;
+  background: var(--ngd-node-bg-primary-default);
+  border: 2px solid var(--av-color-accent);
+  pointer-events: auto;
+  touch-action: none;
+  cursor: move;
+  transform: translate(-50%, -50%);
+  transition:
+    background 0.1s ease,
+    box-shadow 0.1s ease;
+
+  &:hover {
+    box-shadow: 0 0 0 3px var(--av-color-selection-halo);
+  }
+
+  &:focus-visible,
+  &:active,
+  &.is-dragging {
+    background: var(--av-color-accent);
+    box-shadow: 0 0 0 3px var(--av-color-selection-halo);
   }
 }

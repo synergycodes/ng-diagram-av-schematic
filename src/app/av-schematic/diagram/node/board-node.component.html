@@ -1,0 +1,188 @@
+<div
+  class="board-node"
+  [class.board-node--breadboard]="breadboard()"
+  [class.board-node--jumper-mode]="jumperCreation.handles(node())"
+  [style.width.px]="size().width"
+  [style.height.px]="size().height"
+>
+  <span class="board-node__label" [class.board-node__label--with-notes]="data().notes">
+    {{ data().label }}
+  </span>
+  @if (data().notes; as notes) {
+    <span class="board-node__notes" [attr.title]="notes">{{ notes }}</span>
+  }
+  <svg
+    class="board-node__grid"
+    [attr.width]="size().width"
+    [attr.height]="size().height"
+    [attr.viewBox]="'0 0 ' + size().width + ' ' + size().height"
+    aria-hidden="true"
+  >
+    @for (band of railBands(); track band.row) {
+      <rect
+        class="board-node__rail-band"
+        [class.board-node__rail-band--positive]="band.polarity === 'positive'"
+        [class.board-node__rail-band--negative]="band.polarity === 'negative'"
+        [attr.x]="band.x"
+        [attr.y]="band.y"
+        [attr.width]="band.width"
+        [attr.height]="band.height"
+        [attr.rx]="band.radius"
+      />
+    }
+    @if (channel(); as gap) {
+      <rect
+        class="board-node__center-gap"
+        x="0"
+        [attr.y]="gap.y"
+        [attr.width]="gap.width"
+        [attr.height]="gap.height"
+      />
+    }
+    @for (marking of rowMarkings(); track marking.row) {
+      @if (marking.polarity; as polarity) {
+        <line
+          class="board-node__bus-guide"
+          [class.board-node__bus-guide--positive]="polarity === 'positive'"
+          [class.board-node__bus-guide--negative]="polarity === 'negative'"
+          [attr.x1]="stripeX1()"
+          [attr.y1]="marking.guideY"
+          [attr.x2]="stripeX2()"
+          [attr.y2]="marking.guideY"
+          [attr.stroke-width]="stripeWidth()"
+        />
+      }
+    }
+    @for (trace of exposedTraces(); track trace.id) {
+      <g class="board-node__trace" [attr.stroke]="trace.color" [attr.fill]="trace.color">
+        @for (bridge of trace.bridges; track $index) {
+          <line
+            class="board-node__trace-bridge"
+            [attr.x1]="bridge.x1"
+            [attr.y1]="bridge.y1"
+            [attr.x2]="bridge.x2"
+            [attr.y2]="bridge.y2"
+          />
+        }
+        @for (segment of trace.segments; track $index) {
+          @if (segment.dot) {
+            <circle
+              class="board-node__trace-dot"
+              [attr.cx]="segment.x1"
+              [attr.cy]="segment.y1"
+              [attr.r]="data().pitch * 0.22"
+            />
+          } @else {
+            <line
+              class="board-node__trace-run"
+              [attr.x1]="segment.x1"
+              [attr.y1]="segment.y1"
+              [attr.x2]="segment.x2"
+              [attr.y2]="segment.y2"
+              [attr.stroke-width]="data().pitch * 0.34"
+            />
+          }
+        }
+      </g>
+    }
+    @for (ruler of columnRulers(); track ruler.key) {
+      @for (tick of ruler.ticks; track tick.x) {
+        <text
+          class="board-node__column-tick"
+          [attr.x]="tick.x"
+          [attr.y]="ruler.y"
+          [attr.font-size]="markingFontSize()"
+        >
+          {{ tick.text }}
+        </text>
+      }
+    }
+    @for (marking of rowMarkings(); track marking.row) {
+      <text
+        class="board-node__row-mark"
+        [class.board-node__row-mark--positive]="marking.polarity === 'positive'"
+        [class.board-node__row-mark--negative]="marking.polarity === 'negative'"
+        [attr.x]="rowMarkLeftX()"
+        [attr.y]="marking.y"
+        [attr.font-size]="markingFontSize()"
+        text-anchor="end"
+      >
+        {{ marking.label }}
+      </text>
+      <text
+        class="board-node__row-mark"
+        [class.board-node__row-mark--positive]="marking.polarity === 'positive'"
+        [class.board-node__row-mark--negative]="marking.polarity === 'negative'"
+        [attr.x]="rowMarkRightX()"
+        [attr.y]="marking.y"
+        [attr.font-size]="markingFontSize()"
+        text-anchor="start"
+      >
+        {{ marking.label }}
+      </text>
+    }
+    @for (hole of holes(); track hole.key) {
+      <circle
+        class="board-node__hole"
+        [class.board-node__hole--positive]="hole.polarity === 'positive'"
+        [class.board-node__hole--negative]="hole.polarity === 'negative'"
+        [class.board-node__hole--conflicted]="hole.conflicted"
+        [class.board-node__hole--jumper-source]="jumperCreation.isStart(data().boardId, hole)"
+        [attr.cx]="hole.x"
+        [attr.cy]="hole.y"
+        [attr.r]="holeRadius()"
+        [attr.stroke-width]="hole.strokeWidth"
+      />
+    }
+  </svg>
+
+  @for (trace of exposedTraces(); track trace.id) {
+    <span
+      class="board-node__trace-label"
+      [style.left.px]="trace.labelX"
+      [style.top.px]="trace.labelY"
+    >
+      {{ trace.net ?? trace.label }}
+    </span>
+  }
+
+  @for (hole of holes(); track hole.key) {
+    <ng-diagram-port
+      class="board-node__port board-node__port--hole"
+      [id]="hole.portId"
+      type="both"
+      side="left"
+      originPoint="centerLeft"
+      [style.left.px]="holePortLeft(hole)"
+      [style.top.px]="holePortTop(hole)"
+      [style.width.px]="holePortSize()"
+      [style.height.px]="holePortSize()"
+    >
+      <span
+        class="board-node__port-hit"
+        [title]="hole.address"
+        (pointerdown)="onHolePointerDown($event, hole)"
+      ></span>
+    </ng-diagram-port>
+  }
+
+  @for (trace of exposedTraces(); track trace.id) {
+    <ng-diagram-port
+      class="board-node__port board-node__port--trace"
+      [id]="trace.portId"
+      type="both"
+      side="left"
+      originPoint="centerLeft"
+      [style.left.px]="tracePortLeft(trace)"
+      [style.top.px]="tracePortTop(trace)"
+      [style.width.px]="holePortSize()"
+      [style.height.px]="holePortSize()"
+    >
+      <span
+        class="board-node__port-hit board-node__port-hit--trace"
+        [style.background]="trace.color"
+        [title]="trace.label + (trace.net ? ' (' + trace.net + ')' : '')"
+      ></span>
+    </ng-diagram-port>
+  }
+</div>

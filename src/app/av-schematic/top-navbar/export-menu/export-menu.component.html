@@ -10,29 +10,43 @@
     [disabled]="!canExport()"
     (click)="toggle()"
   >
-    Export
+    Exportar
   </button>
 
   @if (open) {
-    <div class="panel" role="menu">
-      <button
-        type="button"
-        class="panel-item"
-        role="menuitem"
-        [disabled]="isExporting()"
-        (click)="exportPng()"
-      >
-        Export to PNG
-      </button>
-      <button
-        type="button"
-        class="panel-item"
-        role="menuitem"
-        [disabled]="isExporting()"
-        (click)="exportDxf()"
-      >
-        Export to DXF
-      </button>
+    <div class="popover">
+      <div class="panel" role="menu">
+        <button
+          type="button"
+          class="panel-item"
+          role="menuitem"
+          [disabled]="isExporting()"
+          (click)="exportPng()"
+        >
+          Exportar para PNG
+        </button>
+        <button
+          type="button"
+          class="panel-item"
+          role="menuitem"
+          [disabled]="isExporting()"
+          (click)="exportSvg()"
+        >
+          Exportar para SVG
+        </button>
+        <button
+          type="button"
+          class="panel-item"
+          role="menuitem"
+          [disabled]="isExporting()"
+          (click)="exportDxf()"
+        >
+          Exportar para DXF
+        </button>
+      </div>
+      @if (exportError(); as message) {
+        <p class="export-error" role="alert" aria-atomic="true">{{ message }}</p>
+      }
     </div>
   }
 </div>

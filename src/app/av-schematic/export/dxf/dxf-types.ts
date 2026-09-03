@@ -11,6 +11,7 @@ import type { DxfTextStyle } from './dxf-text-style';
 export interface DxfRenderContext {
   readonly doc: DxfDocument;
   readonly mapper: CoordinateMapper;
+  readonly nodes: readonly Node[];
 }
 
 export type DxfNodeRenderer = (ctx: DxfRenderContext, node: Node) => void;
@@ -24,7 +25,7 @@ export interface DxfHeaderPair {
 
 /**
  * Configuration for a DXF export. Project-specific code builds one of these
- * (see av-dxf-config.ts) and passes it into DxfExporter — that's the entire
+ * (see av-dxf-config.ts) and passes it into DxfExporter - that's the entire
  * extension surface for plugging in new node/edge types.
  */
 export interface DxfExportConfig {

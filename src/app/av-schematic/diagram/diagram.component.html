@@ -1,4 +1,9 @@
-<div class="diagram">
+<div
+  class="diagram"
+  [class.wire-pick-active]="wirePickActive()"
+  (pointerup)="onCanvasPointerEnd($event)"
+  (pointercancel)="onCanvasPointerEnd($event)"
+>
   <ng-diagram
     [model]="model"
     [config]="config"
@@ -8,10 +13,24 @@
     (paletteItemDropped)="onPaletteItemDropped($event)"
     (diagramInit)="onDiagramInit($event)"
     (edgeDrawEnded)="onEdgeDrawEnded($event)"
+    (clipboardPasted)="onClipboardPasted($event)"
     (selectionMoved)="onSelectionMoved($event)"
+    (nodeDragStarted)="onNodeDragStarted($event)"
     (nodeDragEnded)="onNodeDragEnded($event)"
   >
     <ng-diagram-background type="dots" />
   </ng-diagram>
   <app-edge-reshape-overlay />
+  <button
+    type="button"
+    class="wire-pick-control"
+    [class.wire-pick-control--active]="wirePickActive()"
+    [attr.aria-pressed]="wirePickActive()"
+    aria-keyshortcuts="Alt"
+    title="Ative e clique para selecionar um fio encoberto. Você também pode segurar Alt."
+    (click)="toggleWirePickMode()"
+  >
+    {{ wirePickActive() ? 'Clique no fio oculto' : 'Selecionar fio oculto' }}
+    <span aria-hidden="true">Alt</span>
+  </button>
 </div>

@@ -1,6 +1,9 @@
 export const LAYERS = {
+  BOARDS: 'BOARDS',
   DEVICES: 'DEVICES',
+  FOOTPRINTS: 'FOOTPRINTS',
   WIRES: 'WIRES',
+  JUMPERS: 'JUMPERS',
 } as const;
 
 export const ACI = {
@@ -43,7 +46,7 @@ export const DEFAULT_NODE_WIDTH = 240;
 export const PORT_WIDTH = 8;
 export const PORT_HEIGHT = 13;
 
-/** Mirrors `.port-row { min-height: 36px }` — fallback when measuredPorts is missing. */
+/** Mirrors `.port-row { min-height: 36px }` - fallback when measuredPorts is missing. */
 export const FALLBACK_PORT_ROW_HEIGHT = 36;
 
 /**
@@ -62,6 +65,7 @@ export const FONT_INFO = 10;
 export const FONT_LABEL = 12;
 export const FONT_CONNECTOR = 10;
 export const FONT_WIRE_LABEL = 10;
+export const FONT_PHYSICAL_LABEL = 9;
 
 /** Mirrors the [positionOnEdge]="'30px'" / "'-30px'" markers in wire-edge.component.html. */
 export const WIRE_LABEL_DISTANCE_FROM_END = 30;

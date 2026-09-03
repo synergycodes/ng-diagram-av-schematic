@@ -44,3 +44,29 @@
     border-color: var(--ngd-input-stroke-primary-focus);
   }
 }
+
+.physical-ports-note {
+  margin: 0 0 var(--ngd-primitive-4rule-8);
+  color: var(--ngd-txt-secondary-default);
+  line-height: 1.4;
+}
+
+.physical-ports-list {
+  display: grid;
+  gap: var(--ngd-primitive-4rule-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--ngd-primitive-4rule-8);
+    color: var(--ngd-txt-primary-default);
+
+    span:last-child {
+      color: var(--ngd-txt-secondary-default);
+      font-variant-numeric: tabular-nums;
+    }
+  }
+}

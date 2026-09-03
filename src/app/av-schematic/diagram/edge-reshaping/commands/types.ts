@@ -28,4 +28,40 @@ export interface ReshapeFinishCommand {
   readonly edgeId: string;
 }
 
-export type EdgeCommand = SetEdgeRouteCommand | ReshapeMoveCommand | ReshapeFinishCommand;
+// Bend editing: create a bend on a segment, drag one bend, delete one bend.
+// All three act on a single vertex; `reshape-move` slides a whole segment.
+
+// Insert a bend jog on `segmentIndex`, at the world point the user clicked.
+export interface InsertBendCommand {
+  readonly kind: 'insert-bend';
+  readonly edgeId: string;
+  readonly segmentIndex: number;
+  readonly at: Point;
+  readonly grid: { x: number; y: number } | null;
+}
+
+// Delete the bend at `bendIndex` (an interior vertex index).
+export interface RemoveBendCommand {
+  readonly kind: 'remove-bend';
+  readonly edgeId: string;
+  readonly bendIndex: number;
+}
+
+// Apply one live bend drag (snap, slide both incident segments, re-anchor, write).
+export interface MoveBendCommand {
+  readonly kind: 'move-bend';
+  readonly edgeId: string;
+  readonly initialPoints: readonly Point[];
+  readonly bendIndex: number;
+  readonly grid: { x: number; y: number } | null;
+  readonly dxWorld: number;
+  readonly dyWorld: number;
+}
+
+export type EdgeCommand =
+  | SetEdgeRouteCommand
+  | ReshapeMoveCommand
+  | ReshapeFinishCommand
+  | InsertBendCommand
+  | RemoveBendCommand
+  | MoveBendCommand;

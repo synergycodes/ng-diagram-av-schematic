@@ -7,6 +7,11 @@
     (keydown.enter)="onOpenDetail()"
     (keydown.space)="onOpenDetail(); $event.preventDefault()"
   >
+    <app-device-illustration
+      class="device-row__illustration"
+      [device]="device().template"
+      [decorative]="true"
+    />
     <div class="device-row__main">
       @if (device().template.manufacturer) {
         <span class="device-row__manufacturer p10">
@@ -24,9 +29,16 @@
             <span [class.is-match]="seg.match">{{ seg.text }}</span>
           }
         } @else {
-          New device
+          Novo componente
         }
       </span>
+      @if (device().template.notes; as notes) {
+        <span class="device-row__notes p10">
+          @for (seg of notes | highlightSegments: searchQuery(); track $index) {
+            <span [class.is-match]="seg.match">{{ seg.text }}</span>
+          }
+        </span>
+      }
     </div>
     @if (categoryLabel()) {
       <span class="device-row__chip">{{ categoryLabel() }}</span>
@@ -36,6 +48,11 @@
   <ng-diagram-palette-item-preview>
     <div class="device-preview">
       <div class="device-preview__header">
+        <app-device-illustration
+          class="device-preview__illustration"
+          [device]="device().template"
+          [decorative]="true"
+        />
         <span class="device-preview__id">{{ device().template.deviceId || '—' }}</span>
         <span class="device-preview__info">{{ device().template.manufacturer }}</span>
         <span class="device-preview__info">{{ device().template.model }}</span>

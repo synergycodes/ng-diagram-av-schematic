@@ -1,202 +1,179 @@
 import { type Edge, type Node } from 'ng-diagram';
 import {
-  EdgeTemplateType,
+  MINIMAL_TWO_NETS_PLACEMENT,
+  MINIMAL_TWO_NETS_WIREVIZ_YAML,
+} from '../wireviz-import/fixtures/minimal-two-nets.fixture';
+import { importWireViz } from '../wireviz-import/import-wireviz';
+import { fromCanonicalProject, toCanonicalProject } from './model/canonical-project';
+import {
+  EXTERNAL_COMPONENT_NODES,
+  PHYSICAL_BOARD_NODES,
+  PROTOBOARD_ENDPOINT_NODES,
+  PHYSICAL_WIRE_EDGES,
+  PLACA_A_BOARD,
+  SEATED_COMPONENT_NODES,
+} from './fixtures/physical-boards.fixture';
+import {
   NodeTemplateType,
   type AvSchematicEdgeData,
   type AvSchematicNodeData,
+  type BoardNodeData,
+  type DeviceNodeData,
 } from './model/interfaces';
+import { applyVisualZOrder } from './model/visual-planes';
+
+/**
+ * Tracer bullet seed (issue #1 / talus-wiring-editor): board A (6 x 11
+ * holes), an Arduino Nano and a TB6612FNG breakout, and the two nets
+ * produced by actually importing the minimal WireViz fixture below - this
+ * is the real import pipeline running at load time, not hand-authored
+ * edges that happen to match it.
+ *
+ * Issue #3 adds the physical layer on the same canvas: board A now carries
+ * its six real copper rails, and the placa de origem plus pecas E/G and
+ * their seated footprints come from `fixtures/physical-boards.fixture.ts`.
+ *
+ * Board A having copper is why the tracer devices below only address a hole
+ * for the pins that genuinely belong to a rail. A rail is one electrical
+ * point across its whole row, so parking five different signals on one row
+ * would short them together - see docs/physical-footprints.md.
+ *
+ * See docs/wiring-tracer-bullet.md for the integration decision this seed
+ * exercises, and docs/wireviz-import-limits.md for the parser's supported
+ * subset.
+ */
+
+const boardA: Node<BoardNodeData> = {
+  id: 'board-a',
+  type: NodeTemplateType.BoardNode,
+  position: { x: 60, y: 60 },
+  data: PLACA_A_BOARD,
+};
+
+// Nano and TB6612FNG are positioned so their illustrated cards overlap board
+// A's own footprint (x: 60..292, y: 60..192 for rows=6/cols=11/pitch=20 - see
+// board-geometry.ts::boardSize) in the visual plane. `nodes` below keeps the
+// persistent default keeps the board behind components and wires. Still just
+// one ng-diagram canvas: the board is an ordinary node, not a background layer.
+const nano: Node<DeviceNodeData> = {
+  id: 'nano-1',
+  type: NodeTemplateType.DeviceNode,
+  position: { x: 70, y: 66 },
+  data: {
+    type: 'device',
+    deviceId: 'NANO-1',
+    manufacturer: 'Arduino',
+    model: 'Nano',
+    category: 'microcontroller',
+    location: 'Board A',
+    boardId: 'board-a',
+    ports: [
+      { id: 'vin', label: 'VIN', direction: 'input', connectorType: 'Power' },
+      { id: 'd9', label: 'D9', direction: 'output', connectorType: 'PWM' },
+      { id: 'd8', label: 'D8', direction: 'output', connectorType: 'GPIO' },
+      // L1 is GND_SYS and L3 is 5V_LOGIC on placa A; both of these pins really
+      // do belong to those rails, so addressing them is not a short.
+      {
+        id: 'gnd',
+        label: 'GND',
+        direction: 'output',
+        connectorType: 'Power',
+        hole: { row: 0, col: 1 },
+      },
+      {
+        id: '5v',
+        label: '5V',
+        direction: 'output',
+        connectorType: 'Power',
+        hole: { row: 2, col: 1 },
+      },
+    ],
+  },
+};
+
+const tb6612: Node<DeviceNodeData> = {
+  id: 'tb6612-1',
+  type: NodeTemplateType.DeviceNode,
+  position: { x: 185, y: 66 },
+  data: {
+    type: 'device',
+    deviceId: 'DRV-1',
+    manufacturer: 'Toshiba',
+    model: 'TB6612FNG',
+    category: 'motor-driver',
+    location: 'Board A',
+    boardId: 'board-a',
+    ports: [
+      { id: 'pwma', label: 'PWMA', direction: 'input', connectorType: 'PWM' },
+      { id: 'ain1', label: 'AIN1', direction: 'input', connectorType: 'GPIO' },
+      { id: 'stby', label: 'STBY', direction: 'input', connectorType: 'GPIO' },
+      // L3 is 5V_LOGIC (shared with the Nano's 5V, one net) and L2 is GND_MOT.
+      {
+        id: 'vcc',
+        label: 'VCC',
+        direction: 'input',
+        connectorType: 'Power',
+        hole: { row: 2, col: 6 },
+      },
+      {
+        id: 'gnd',
+        label: 'GND',
+        direction: 'input',
+        connectorType: 'Power',
+        hole: { row: 1, col: 6 },
+      },
+      { id: 'ao1', label: 'AO1', direction: 'output', connectorType: 'Motor' },
+      { id: 'ao2', label: 'AO2', direction: 'output', connectorType: 'Motor' },
+    ],
+  },
+};
+
+const baseNodes: Node<AvSchematicNodeData>[] = [boardA, nano, tb6612];
+const baseProject = toCanonicalProject(baseNodes, []);
+const imported = importWireViz(MINIMAL_TWO_NETS_WIREVIZ_YAML, {
+  placement: MINIMAL_TWO_NETS_PLACEMENT,
+  components: baseProject.electrical.components,
+});
+const importedModel = fromCanonicalProject({
+  ...baseProject,
+  electrical: imported.electrical,
+});
+
+// Physical boards go first so their bodies render behind everything seated on
+// them; seated and external components follow. Same single canvas, same
+// coordinate plane, same `Node[]` array as the tracer-bullet nodes.
+const nodes: Node<AvSchematicNodeData>[] = [
+  ...PHYSICAL_BOARD_NODES,
+  ...importedModel.nodes,
+  ...PROTOBOARD_ENDPOINT_NODES,
+  ...SEATED_COMPONENT_NODES,
+  ...EXTERNAL_COMPONENT_NODES,
+];
+
+// Give the direction-line net (W2) a manual bend, demonstrating that manually
+// routed points survive being produced by the WireViz import (they're just
+// ordinary edge points from here on - edge-reshaping owns editing them).
+const edges: Edge<AvSchematicEdgeData>[] = [
+  ...importedModel.edges.map((edge) =>
+    edge.data.wireId === 'W2'
+      ? ({
+          ...edge,
+          routingMode: 'manual',
+          points: [
+            { x: 178, y: 100 },
+            { x: 200, y: 100 },
+            { x: 200, y: 150 },
+            { x: 185, y: 150 },
+          ],
+        } satisfies Edge<AvSchematicEdgeData>)
+      : edge,
+  ),
+  ...PHYSICAL_WIRE_EDGES,
+];
+
+const orderedModel = applyVisualZOrder(nodes, edges);
 
 export const diagramModel: {
   nodes: Node<AvSchematicNodeData>[];
   edges: Edge<AvSchematicEdgeData>[];
-} = {
-  nodes: [
-    {
-      id: 'mic-1',
-      type: NodeTemplateType.DeviceNode,
-      position: { x: 60, y: 80 },
-      data: {
-        type: 'device',
-        deviceId: 'MIC-1',
-        manufacturer: 'Shure',
-        model: 'SM58',
-        category: 'microphone',
-        location: 'Stage Center',
-        ports: [{ id: 'out', label: 'OUT', direction: 'output', connectorType: 'XLR' }],
-      },
-    },
-    {
-      id: 'media-1',
-      type: NodeTemplateType.DeviceNode,
-      position: { x: 60, y: 380 },
-      data: {
-        type: 'device',
-        deviceId: 'MEDIA-1',
-        manufacturer: 'BrightSign',
-        model: 'HD224',
-        category: 'media-player',
-        location: 'Rack 2U-1',
-        ports: [
-          { id: 'hdmi-out', label: 'HDMI', direction: 'output', connectorType: 'HDMI' },
-          { id: 'audio-out', label: 'AUDIO', direction: 'output', connectorType: '3.5mm' },
-        ],
-      },
-    },
-    {
-      id: 'mixer-1',
-      type: NodeTemplateType.DeviceNode,
-      position: { x: 580, y: 60 },
-      data: {
-        type: 'device',
-        deviceId: 'MIXER-1',
-        manufacturer: 'Yamaha',
-        model: 'MG10XU',
-        category: 'mixer',
-        location: 'FOH Booth',
-        ports: [
-          { id: 'mic-1', label: 'MIC 1', direction: 'input', connectorType: 'XLR' },
-          { id: 'mic-2', label: 'MIC 2', direction: 'input', connectorType: 'XLR' },
-          { id: 'mic-3', label: 'MIC 3', direction: 'input', connectorType: 'XLR' },
-          { id: 'mic-4', label: 'MIC 4', direction: 'input', connectorType: 'XLR' },
-          { id: 'line-1', label: 'LINE 1', direction: 'input', connectorType: 'TRS' },
-          { id: 'line-2', label: 'LINE 2', direction: 'input', connectorType: 'TRS' },
-          { id: 'out-1', label: 'OUT 1', direction: 'output', connectorType: 'XLR' },
-          { id: 'out-2', label: 'OUT 2', direction: 'output', connectorType: 'XLR' },
-        ],
-      },
-    },
-    {
-      id: 'amp-1',
-      type: NodeTemplateType.DeviceNode,
-      position: { x: 1100, y: 60 },
-      data: {
-        type: 'device',
-        deviceId: 'AMP-1',
-        manufacturer: 'Crown',
-        model: 'XLi 1500',
-        category: 'amplifier',
-        location: 'Rack 1U-3',
-        ports: [
-          { id: 'in-a', label: 'IN A', direction: 'input', connectorType: 'XLR' },
-          { id: 'in-b', label: 'IN B', direction: 'input', connectorType: 'XLR' },
-          { id: 'out-a', label: 'OUT A', direction: 'output', connectorType: 'Speakon' },
-          { id: 'out-b', label: 'OUT B', direction: 'output', connectorType: 'Speakon' },
-        ],
-      },
-    },
-    {
-      id: 'spk-1',
-      type: NodeTemplateType.DeviceNode,
-      position: { x: 1620, y: 40 },
-      data: {
-        type: 'device',
-        deviceId: 'SPK-1',
-        manufacturer: 'JBL',
-        model: 'EON615',
-        category: 'loudspeaker',
-        location: 'Stage Left',
-        ports: [{ id: 'in', label: 'IN', direction: 'input', connectorType: 'Speakon' }],
-      },
-    },
-    {
-      id: 'spk-2',
-      type: NodeTemplateType.DeviceNode,
-      position: { x: 1620, y: 280 },
-      data: {
-        type: 'device',
-        deviceId: 'SPK-2',
-        manufacturer: 'JBL',
-        model: 'EON615',
-        category: 'loudspeaker',
-        location: 'Stage Right',
-        ports: [{ id: 'in', label: 'IN', direction: 'input', connectorType: 'Speakon' }],
-      },
-    },
-    {
-      id: 'display-1',
-      type: NodeTemplateType.DeviceNode,
-      position: { x: 580, y: 540 },
-      data: {
-        type: 'device',
-        deviceId: 'DISPLAY-1',
-        manufacturer: 'NEC',
-        model: 'E325',
-        category: 'display',
-        location: 'Lobby',
-        ports: [{ id: 'hdmi-in', label: 'HDMI', direction: 'input', connectorType: 'HDMI' }],
-      },
-    },
-  ],
-  edges: [
-    {
-      id: 'wire-1',
-      type: EdgeTemplateType.WireEdge,
-      source: 'mic-1',
-      sourcePort: 'out',
-      target: 'mixer-1',
-      targetPort: 'mic-1',
-      data: { type: 'wire', wireId: 'W-001', wireType: 'audio' },
-    },
-    {
-      id: 'wire-2',
-      type: EdgeTemplateType.WireEdge,
-      source: 'media-1',
-      sourcePort: 'audio-out',
-      target: 'mixer-1',
-      targetPort: 'line-1',
-      data: { type: 'wire', wireId: 'W-002', wireType: 'audio' },
-    },
-    {
-      id: 'wire-3',
-      type: EdgeTemplateType.WireEdge,
-      source: 'media-1',
-      sourcePort: 'hdmi-out',
-      target: 'display-1',
-      targetPort: 'hdmi-in',
-      routingMode: 'manual',
-      points: [
-        { x: 307, y: 480 },
-        { x: 510, y: 480 },
-        { x: 510, y: 640 },
-        { x: 573, y: 640 },
-      ],
-      data: { type: 'wire', wireId: 'W-003', wireType: 'video' },
-    },
-    {
-      id: 'wire-4',
-      type: EdgeTemplateType.WireEdge,
-      source: 'mixer-1',
-      sourcePort: 'out-1',
-      target: 'amp-1',
-      targetPort: 'in-a',
-      data: { type: 'wire', wireId: 'W-004', wireType: 'audio' },
-    },
-    {
-      id: 'wire-5',
-      type: EdgeTemplateType.WireEdge,
-      source: 'mixer-1',
-      sourcePort: 'out-2',
-      target: 'amp-1',
-      targetPort: 'in-b',
-      data: { type: 'wire', wireId: 'W-005', wireType: 'audio' },
-    },
-    {
-      id: 'wire-6',
-      type: EdgeTemplateType.WireEdge,
-      source: 'amp-1',
-      sourcePort: 'out-a',
-      target: 'spk-1',
-      targetPort: 'in',
-      data: { type: 'wire', wireId: 'W-006', wireType: 'speaker' },
-    },
-    {
-      id: 'wire-7',
-      type: EdgeTemplateType.WireEdge,
-      source: 'amp-1',
-      sourcePort: 'out-b',
-      target: 'spk-2',
-      targetPort: 'in',
-      data: { type: 'wire', wireId: 'W-007', wireType: 'speaker' },
-    },
-  ],
-};
+} = orderedModel;

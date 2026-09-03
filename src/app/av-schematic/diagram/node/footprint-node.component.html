@@ -1,0 +1,112 @@
+@if (footprint(); as footprint) {
+  <div class="footprint-node" [style.width.px]="size().width" [style.height.px]="size().height">
+    <div class="footprint-node__caption">
+      <span>{{ data().deviceId }}</span>
+      <span>{{ data().model }}</span>
+      <span>{{ rotation() }}&deg;</span>
+    </div>
+
+    <div class="footprint-node__rotation" (pointerdown)="stopNodeGesture($event)">
+      <button type="button" title="Girar 90 graus à esquerda" (click)="rotate(-1, $event)">
+        &#8634;
+      </button>
+      <button type="button" title="Girar 90 graus à direita" (click)="rotate(1, $event)">
+        &#8635;
+      </button>
+    </div>
+
+    <svg
+      class="footprint-node__illustration"
+      [attr.width]="size().width"
+      [attr.height]="size().height"
+      [attr.viewBox]="viewBox()"
+      aria-hidden="true"
+    >
+      @for (shape of shapes(); track $index) {
+        @switch (shape.kind) {
+          @case ('rect') {
+            <rect
+              [attr.x]="shape.x"
+              [attr.y]="shape.y"
+              [attr.width]="shape.width"
+              [attr.height]="shape.height"
+              [attr.rx]="shape.rx"
+              [attr.fill]="shape.fill"
+              [attr.stroke]="shape.stroke"
+              vector-effect="non-scaling-stroke"
+            />
+          }
+          @case ('circle') {
+            <circle
+              [attr.cx]="shape.cx"
+              [attr.cy]="shape.cy"
+              [attr.r]="shape.r"
+              [attr.fill]="shape.fill"
+              [attr.stroke]="shape.stroke"
+              vector-effect="non-scaling-stroke"
+            />
+          }
+          @case ('line') {
+            <line
+              [attr.x1]="shape.x1"
+              [attr.y1]="shape.y1"
+              [attr.x2]="shape.x2"
+              [attr.y2]="shape.y2"
+              [attr.stroke]="shape.stroke"
+              [attr.stroke-width]="shape.width"
+              stroke-linecap="round"
+            />
+          }
+          @case ('text') {
+            <text
+              [attr.x]="shape.x"
+              [attr.y]="shape.y"
+              [attr.font-size]="shape.size"
+              [attr.text-anchor]="shape.anchor"
+              [attr.fill]="shape.fill"
+              [attr.transform]="shape.transform"
+            >
+              {{ shape.text }}
+            </text>
+          }
+        }
+      }
+
+      @for (pad of pads(); track pad.id) {
+        <circle
+          class="footprint-node__pin-pad"
+          [class.footprint-node__pin-pad--primary]="pad.primary"
+          [attr.cx]="pad.cx"
+          [attr.cy]="pad.cy"
+          r="0.19"
+        />
+      }
+    </svg>
+
+    @for (pin of pins(); track pin.id) {
+      @if (pin.port) {
+        <ng-diagram-port
+          class="footprint-node__port"
+          [id]="pin.id"
+          type="both"
+          side="left"
+          originPoint="centerLeft"
+          [style.left.px]="portLeft(pin)"
+          [style.top.px]="portTop(pin)"
+          [style.width.px]="portSize()"
+          [style.height.px]="portSize()"
+        >
+          <span
+            class="footprint-node__port-hit"
+            [class.footprint-node__port-hit--primary]="pin.primary"
+            [title]="pin.label"
+          ></span>
+        </ng-diagram-port>
+      }
+    }
+
+    @if (conflictMessage(); as message) {
+      <div class="footprint-node__conflict" role="status">{{ message }}</div>
+    }
+  </div>
+}

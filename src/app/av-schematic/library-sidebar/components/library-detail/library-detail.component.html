@@ -4,8 +4,8 @@
     class="close-button"
     type="button"
     (click)="onBack()"
-    aria-label="Close"
-    appTooltip="Close"
+    aria-label="Fechar"
+    appTooltip="Fechar"
   >
     <span class="icon icon-close" aria-hidden="true"></span>
   </button>
@@ -17,11 +17,11 @@
 
 <div class="detail-actions">
   <button class="save-button p10" type="button" (click)="onSave()" [disabled]="!canSave()">
-    Save
+    Salvar
   </button>
   @if (mode() === 'edit') {
     <button class="remove-button p10" type="button" (click)="onRemove()">
-      Remove from library
+      Remover do catálogo
     </button>
   }
 </div>

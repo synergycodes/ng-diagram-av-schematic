@@ -1,8 +1,19 @@
-<div class="device-node">
+<div class="device-node" [class.device-node--illustrated]="illustration() !== null">
   <div class="device-node__header">
-    <span class="device-node__id">{{ data().deviceId }}</span>
-    <span class="device-node__info">{{ data().manufacturer }}</span>
-    <span class="device-node__info">{{ data().model }}</span>
+    @if (illustration()) {
+      <app-device-illustration
+        class="device-node__illustration"
+        [device]="data()"
+        [decorative]="true"
+      />
+    }
+    <div class="device-node__header-text">
+      <span class="device-node__id">{{ data().deviceId }}</span>
+      @if (!illustration()) {
+        <span class="device-node__info">{{ data().manufacturer }}</span>
+      }
+      <span class="device-node__info">{{ data().model }}</span>
+    </div>
   </div>
   <div class="device-node__separator"></div>
   <div class="device-node__ports">

@@ -14,6 +14,40 @@ app-sidebar-placeholder {
   display: flex;
 }
 
+.board-summary,
+.visual-plane {
+  margin: var(--ngd-primitive-4rule-16);
+  display: flex;
+  flex-direction: column;
+  gap: var(--ngd-primitive-4rule-8);
+  color: var(--ngd-txt-primary-default);
+}
+
+.board-summary {
+  padding-bottom: var(--ngd-primitive-4rule-16);
+  border-bottom: 1px solid var(--ngd-ui-stroke-primary-default);
+}
+
+.visual-plane label,
+.field-label {
+  font-weight: 600;
+}
+
+.visual-plane input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--ngd-ui-stroke-primary-default);
+  border-radius: var(--ngd-token-radius-button-m);
+  padding: var(--ngd-primitive-4rule-8);
+  color: var(--ngd-txt-primary-default);
+  background: transparent;
+}
+
+.visual-plane small,
+.board-summary span:not(.field-label) {
+  color: var(--ngd-txt-secondary-default);
+}
+
 .sidebar-actions {
   padding: var(--ngd-primitive-4rule-16);
   display: flex;

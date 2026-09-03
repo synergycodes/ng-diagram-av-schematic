@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { type Point } from 'ng-diagram';
-import { collapseCollinearBends, dropSameAxisBends, removeStraightSegments } from './simplify';
+import {
+  collapseCollinearBends,
+  dropSameAxisBends,
+  normalizeRoute,
+  removeStraightSegments,
+} from './simplify';
 
 describe('collapseCollinearBends', () => {
   it('folds a straight pass-through point', () => {
@@ -65,6 +70,16 @@ describe('dropSameAxisBends', () => {
     ];
     expect(dropSameAxisBends(points)).toEqual(points);
   });
+
+  it('keeps a same-axis reversal', () => {
+    const points: Point[] = [
+      { x: 0, y: 0 },
+      { x: 100, y: 0 },
+      { x: 50, y: 0 },
+    ];
+    expect(dropSameAxisBends(points)).toEqual(points);
+    expect(normalizeRoute(points)).toEqual(points);
+  });
 });
 
 describe('removeStraightSegments', () => {
@@ -89,5 +104,15 @@ describe('removeStraightSegments', () => {
     const result = removeStraightSegments(points, 5);
     expect(result[0]).toEqual({ x: 0, y: 0 });
     expect(result[result.length - 1]).toEqual({ x: 100, y: 100 });
+  });
+
+  it('preserves an aligned reversal and its internal excursion', () => {
+    const points: Point[] = [
+      { x: 0, y: 0 },
+      { x: 100, y: 0 },
+      { x: 50, y: 0 },
+      { x: 50, y: 40 },
+    ];
+    expect(removeStraightSegments(points, 5)).toEqual(points);
   });
 });

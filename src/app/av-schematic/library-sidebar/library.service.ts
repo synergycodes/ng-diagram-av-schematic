@@ -1,5 +1,7 @@
 import { computed, Injectable, signal } from '@angular/core';
 import { type DeviceNodeData } from '../diagram/model/interfaces';
+import { browserLocalStorage, loadLibraryDevices, persistLibraryDevices } from './library-storage';
+import { matchesLibrarySearch } from './library-search';
 import { SEED_LIBRARY, type LibraryDevice } from './seed-library';
 
 type LibraryEditMode = 'create' | 'edit';
@@ -7,7 +9,9 @@ type LibraryEditMode = 'create' | 'edit';
 /** Page-scoped state for the device-library palette: list, expand/collapse, edit-mode lifecycle, and debounced search. */
 @Injectable()
 export class LibraryService {
-  readonly devices = signal<LibraryDevice[]>(SEED_LIBRARY);
+  private readonly storage = browserLocalStorage();
+
+  readonly devices = signal<LibraryDevice[]>(loadLibraryDevices(this.storage));
   readonly isExpanded = signal(false);
   readonly editingDeviceId = signal<string | null>(null);
   readonly editingMode = signal<LibraryEditMode | null>(null);
@@ -20,13 +24,9 @@ export class LibraryService {
   });
 
   readonly filteredDevices = computed<LibraryDevice[]>(() => {
-    const query = this.searchQuery().trim().toLowerCase();
+    const query = this.searchQuery().trim();
     if (!query) return this.devices();
-    return this.devices().filter((d) => {
-      const manufacturer = d.template.manufacturer?.toLowerCase() ?? '';
-      const model = d.template.model?.toLowerCase() ?? '';
-      return manufacturer.includes(query) || model.includes(query);
-    });
+    return this.devices().filter((device) => matchesLibrarySearch(device, query));
   });
 
   expand(): void {
@@ -38,7 +38,7 @@ export class LibraryService {
   }
 
   beginCreate(): void {
-    this.editingDeviceId.set(`lib-custom-${crypto.randomUUID()}`);
+    this.editingDeviceId.set(`lib-custom-${createLibraryId()}`);
     this.editingMode.set('create');
   }
 
@@ -56,6 +56,7 @@ export class LibraryService {
         list.map((d) => (d.libraryId === libraryId ? { ...d, template } : d)),
       );
     }
+    persistLibraryDevices(this.storage, this.devices());
     this.closeDetail();
   }
 
@@ -66,8 +67,27 @@ export class LibraryService {
 
   removeDevice(libraryId: string): void {
     this.devices.update((list) => list.filter((d) => d.libraryId !== libraryId));
+    persistLibraryDevices(this.storage, this.devices());
     if (this.editingDeviceId() === libraryId) {
       this.closeDetail();
     }
   }
+
+  restoreDefaults(): void {
+    const restored = [
+      ...structuredClone(SEED_LIBRARY),
+      ...this.devices().filter((device) => device.libraryId.startsWith('lib-custom-')),
+    ];
+    this.devices.set(restored);
+    persistLibraryDevices(this.storage, restored);
+    this.closeDetail();
+  }
 }
+
+const createLibraryId = (): string => {
+  try {
+    return globalThis.crypto.randomUUID();
+  } catch {
+    return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+  }
+};

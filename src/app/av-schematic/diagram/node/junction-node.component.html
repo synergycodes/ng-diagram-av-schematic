@@ -1,0 +1,22 @@
+<div class="junction-node" [style.min-height.px]="height()">
+  <div class="junction-node__caption">
+    <span class="junction-node__label">{{ data().label }}</span>
+    <span class="junction-node__kind">{{ kindLabel() }}</span>
+    @if (data().netName) {
+      <span class="junction-node__net">{{ data().netName }}</span>
+    }
+    @if (data().notes) {
+      <span class="junction-node__notes">{{ data().notes }}</span>
+    }
+  </div>
+
+  <div class="junction-node__bar">
+    @for (tap of taps(); track tap.id) {
+      <div class="junction-node__tap">
+        <ng-diagram-port [id]="tap.id" type="both" side="left">
+          <div class="junction-node__tap-shape" [attr.title]="'tap ' + tap.index"></div>
+        </ng-diagram-port>
+      </div>
+    }
+  </div>
+</div>

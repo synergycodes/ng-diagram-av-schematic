@@ -4,7 +4,7 @@
 export interface PointerDragHandlers<TState> {
   onMove(event: PointerEvent, state: TState): void;
   // Commit the drop; runs on a real pointerup/cancel, never on teardown().
-  onEnd(event: PointerEvent, state: TState): void;
+  onEnd(event: PointerEvent, state: TState): void | Promise<void>;
   // Clear gesture-scoped UI state; runs on both a real release and teardown().
   onTeardown?(): void;
 }
@@ -22,6 +22,7 @@ export class PointerDragController<TState> {
   private listenerEl: Document | HTMLElement | null = null;
   private pendingEvent: PointerEvent | null = null;
   private rafHandle: number | null = null;
+  private moveSeen = false;
 
   constructor(
     private readonly handlers: PointerDragHandlers<TState>,
@@ -34,6 +35,7 @@ export class PointerDragController<TState> {
 
   begin(event: PointerEvent, handleEl: HTMLElement, state: TState): void {
     this.state = state;
+    this.moveSeen = false;
     this.handleEl = handleEl;
     this.pointerId = event.pointerId;
     try {
@@ -44,9 +46,9 @@ export class PointerDragController<TState> {
     handleEl.classList.add('is-dragging');
     // Cast: the keyed EventMap overloads collapse on the Document|HTMLElement union.
     this.listenerEl = this.options.listenerTarget === 'document' ? document : handleEl;
-    this.listenerEl.addEventListener('pointermove', this.onPointerMove as EventListener);
-    this.listenerEl.addEventListener('pointerup', this.onPointerUp as EventListener);
-    this.listenerEl.addEventListener('pointercancel', this.onPointerUp as EventListener);
+    this.listenerEl.addEventListener('pointermove', this.onPointerMove as unknown as EventListener);
+    this.listenerEl.addEventListener('pointerup', this.onPointerUp as unknown as EventListener);
+    this.listenerEl.addEventListener('pointercancel', this.onPointerUp as unknown as EventListener);
   }
 
   // Idempotent teardown for a destroy hook; does NOT resolve a drop.
@@ -59,11 +61,12 @@ export class PointerDragController<TState> {
 
   private readonly onPointerMove = (event: PointerEvent): void => {
     if (!this.state || event.pointerId !== this.pointerId) return;
+    this.moveSeen = true;
     if (!this.options.coalesce) {
       this.handlers.onMove(event, this.state);
       return;
     }
-    // One commit per frame — high-rate pointers fire 1000+ Hz.
+    // One commit per frame -- high-rate pointers fire 1000+ Hz.
     this.pendingEvent = event;
     if (this.rafHandle !== null) return;
     this.rafHandle = requestAnimationFrame(() => {
@@ -74,13 +77,22 @@ export class PointerDragController<TState> {
     });
   };
 
-  private readonly onPointerUp = (event: PointerEvent): void => {
+  private readonly onPointerUp = async (event: PointerEvent): Promise<void> => {
     const state = this.state;
     if (!state || event.pointerId !== this.pointerId) return;
+    // A frame-coalesced drag may still have one move buffered when the pointer
+    // is released. Commit the release coordinates before canceling that frame
+    // so the persisted bend lands exactly where the user dropped it.
+    if (this.options.coalesce && this.moveSeen && event.type === 'pointerup') {
+      this.handlers.onMove(event, state);
+    }
     this.cleanup();
     this.state = null;
-    this.handlers.onTeardown?.();
-    this.handlers.onEnd(event, state);
+    try {
+      await this.handlers.onEnd(event, state);
+    } finally {
+      this.handlers.onTeardown?.();
+    }
   };
 
   private cleanup(): void {
@@ -89,10 +101,20 @@ export class PointerDragController<TState> {
       this.rafHandle = null;
     }
     this.pendingEvent = null;
+    this.moveSeen = false;
     if (this.listenerEl) {
-      this.listenerEl.removeEventListener('pointermove', this.onPointerMove as EventListener);
-      this.listenerEl.removeEventListener('pointerup', this.onPointerUp as EventListener);
-      this.listenerEl.removeEventListener('pointercancel', this.onPointerUp as EventListener);
+      this.listenerEl.removeEventListener(
+        'pointermove',
+        this.onPointerMove as unknown as EventListener,
+      );
+      this.listenerEl.removeEventListener(
+        'pointerup',
+        this.onPointerUp as unknown as EventListener,
+      );
+      this.listenerEl.removeEventListener(
+        'pointercancel',
+        this.onPointerUp as unknown as EventListener,
+      );
       this.listenerEl = null;
     }
     if (this.handleEl) {

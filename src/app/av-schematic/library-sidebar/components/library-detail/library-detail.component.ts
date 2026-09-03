@@ -56,7 +56,7 @@ export class LibraryDetailComponent {
   protected readonly initialTemplate = signal<DeviceNodeData>(createBlankTemplate());
 
   protected readonly title = computed(() =>
-    this.mode() === 'create' ? 'New device' : 'Edit device',
+    this.mode() === 'create' ? 'Novo componente' : 'Editar componente',
   );
 
   protected readonly canSave = computed(() => {

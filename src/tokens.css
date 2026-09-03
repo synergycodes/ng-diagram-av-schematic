@@ -859,12 +859,39 @@ html[data-theme='dark'] {
   --av-port-width: 8px;
   --av-port-height: 13px;
   --av-color-wire-stroke: var(--ngd-edge-primary-default);
+  /* Stroke for a wire attenuated while another net is highlighted. */
+  --av-color-wire-dimmed: #b8b8b8;
   --av-color-accent: var(--ngd-ui-stroke-primary-highlight);
   --av-color-selection-border: #7938d3;
   --av-color-selection-halo: #482674;
   --av-list-item-bg: var(--ngd-ui-bg-tertiary-default);
+  --av-color-board-surface: #c9a06a;
+  --av-color-board-hole: #2b2118;
+  /* Solderless breadboard: light moulded plastic instead of drilled substrate. */
+  --av-color-breadboard-surface: #faf8f4;
+  --av-color-breadboard-hole: #d4cfc7;
+  --av-color-breadboard-hole-stroke: #b8b2a8;
+  --av-color-breadboard-channel: rgb(0 0 0 / 13%);
+  --av-color-breadboard-marking: #b0a898;
+  --av-color-breadboard-rail-positive: #fff2f2;
+  --av-color-breadboard-rail-negative: #f2f2ff;
+  --av-color-bus-positive: #cc6666;
+  --av-color-bus-negative: #6666cc;
 }
 
 html[data-theme='dark'] {
+  --av-color-wire-dimmed: #4a4a4a;
   --av-list-item-bg: var(--ngd-colors-gray-750);
+  --av-color-board-surface: #8a6a42;
+  --av-color-board-hole: #16110b;
+  /* Still recognisably light plastic, dimmed so it does not glare on canvas. */
+  --av-color-breadboard-surface: #d8d3c9;
+  --av-color-breadboard-hole: #a9a297;
+  --av-color-breadboard-hole-stroke: #8b8479;
+  --av-color-breadboard-channel: rgb(0 0 0 / 24%);
+  --av-color-breadboard-marking: #7d766a;
+  --av-color-breadboard-rail-positive: #ecd9d9;
+  --av-color-breadboard-rail-negative: #d9dcec;
+  --av-color-bus-positive: #b04b4b;
+  --av-color-bus-negative: #4b52b0;
 }

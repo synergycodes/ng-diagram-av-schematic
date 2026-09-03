@@ -37,10 +37,14 @@ export class DeviceFormComponent {
 
   readonly entityId = input.required<string>();
   readonly nodeData = input.required<DeviceNodeData>();
+  readonly readonlyPorts = input(false);
 
   protected readonly fieldTree = this.formService.fieldTree;
   protected readonly showDeviceId = !this.hiddenFields.includes('deviceId');
   protected readonly showLocation = !this.hiddenFields.includes('location');
+  protected readonly portsAreReadonly = computed(
+    () => this.readonlyPorts() || this.nodeData().footprintId !== undefined,
+  );
   protected readonly autofocusManufacturer = computed(() =>
     this.showDeviceId ? null : this.entityId(),
   );

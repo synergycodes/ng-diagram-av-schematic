@@ -1,0 +1,55 @@
+<div class="form-section">
+  <span class="h10 section-title">Junção</span>
+
+  <div class="section-content">
+    <app-form-field label="Nome" fieldId="junctionLabel">
+      <input id="junctionLabel" type="text" class="form-input p10" [formField]="fieldTree.label" />
+    </app-form-field>
+
+    <app-form-field label="Representação" fieldId="junctionKind">
+      <select id="junctionKind" class="form-input p10" [formField]="fieldTree.kind">
+        <option value="junction">Junção</option>
+        <option value="rail">Trilho</option>
+      </select>
+    </app-form-field>
+
+    <app-form-field label="Taps visuais" fieldId="junctionTaps">
+      <input
+        id="junctionTaps"
+        type="number"
+        step="1"
+        class="form-input p10"
+        [formField]="fieldTree.taps"
+      />
+    </app-form-field>
+
+    <app-form-field label="Observação" fieldId="junctionNotes">
+      <textarea
+        id="junctionNotes"
+        rows="3"
+        class="form-input p10"
+        [formField]="fieldTree.notes"
+      ></textarea>
+    </app-form-field>
+  </div>
+</div>
+
+<div class="form-separator"></div>
+
+<div class="form-section">
+  <span class="h10 section-title">Conectividade</span>
+  <dl class="details">
+    <div>
+      <dt>ID</dt>
+      <dd>{{ nodeData().junctionId }}</dd>
+    </div>
+    <div>
+      <dt>Net</dt>
+      <dd>{{ nodeData().netName || nodeData().netId || '—' }}</dd>
+    </div>
+    <div>
+      <dt>Semântica</dt>
+      <dd>Todos os taps pertencem ao mesmo ponto elétrico.</dd>
+    </div>
+  </dl>
+</div>

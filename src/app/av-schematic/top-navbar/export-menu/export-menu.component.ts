@@ -20,6 +20,7 @@ export class ExportMenuComponent {
 
   protected readonly isOpen = signal(false);
   protected readonly isExporting = signal(false);
+  protected readonly exportError = signal<string | null>(null);
   protected readonly canExport = this.exportService.canExport;
 
   constructor() {
@@ -50,6 +51,7 @@ export class ExportMenuComponent {
 
   protected async exportPng(): Promise<void> {
     if (!this.canExport() || this.isExporting()) return;
+    this.exportError.set(null);
     this.isOpen.set(false);
     this.isExporting.set(true);
     try {
@@ -59,8 +61,26 @@ export class ExportMenuComponent {
     }
   }
 
+  protected async exportSvg(): Promise<void> {
+    if (!this.canExport() || this.isExporting()) return;
+    this.exportError.set(null);
+    this.isExporting.set(true);
+    try {
+      await this.exportService.exportSvg();
+      this.exportError.set(null);
+      this.isOpen.set(false);
+    } catch {
+      this.exportError.set(
+        'Não foi possível exportar o SVG. Reduza a área do diagrama e tente novamente.',
+      );
+    } finally {
+      this.isExporting.set(false);
+    }
+  }
+
   protected exportDxf(): void {
     if (!this.canExport() || this.isExporting()) return;
+    this.exportError.set(null);
     this.isOpen.set(false);
     this.exportService.exportDxf();
   }

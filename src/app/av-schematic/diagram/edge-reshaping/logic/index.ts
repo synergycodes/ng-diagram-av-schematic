@@ -22,5 +22,15 @@ export {
 } from './simplify';
 export { stretchPolyline, stretchPolylineWithBendInsertion } from './stretch';
 export { findReshapeableSegments, reshapeSegment, reshapeAnchoredSegment } from './reshape-segment';
+export {
+  DEFAULT_BEND_OFFSET_PX,
+  findBendHandles,
+  insertBendAt,
+  isOrthogonalPolyline,
+  moveBendTo,
+  removeBendAt,
+  type BendHandle,
+} from './bend-editing';
+export { rebuildEndpointPath } from './relink-path';
 export { snapToGrid, type SnapToGridOptions } from './snap-to-grid';
 export { resolveEdgeGrid, snapPointToGrid, edgeGridReferenceNode } from './edge-grid';

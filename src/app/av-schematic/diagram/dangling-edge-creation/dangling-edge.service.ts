@@ -19,6 +19,7 @@ import {
 import { EdgeTemplateType, type WireEdgeData } from '../model/interfaces';
 import { randomShortId } from '../../shared/utils/random-short-id';
 import { TempEdgePointsService } from './temp-edge-points.service';
+import { defaultVisualPlane } from '../model/visual-planes';
 
 /**
  * Turns a port-to-background draw into a dangling wire. ng-diagram discards a
@@ -33,7 +34,7 @@ export class DanglingEdgeService {
   private readonly diagramService = inject(NgDiagramService);
   private readonly tempEdgePoints = inject(TempEdgePointsService);
 
-  handleEdgeDrawEnded(event: EdgeDrawEndedEvent): void {
+  async handleEdgeDrawEnded(event: EdgeDrawEndedEvent): Promise<void> {
     if (event.success || event.reason !== 'noTarget' || !event.sourcePort) return;
 
     // Dropped over a node but missed its ports: leave it unconnected rather than
@@ -62,7 +63,7 @@ export class DanglingEdgeService {
         )
       : rawPoints;
 
-    void this.modelService.addEdges([
+    await this.modelService.addEdges([
       {
         id: randomShortId('wire'),
         type: EdgeTemplateType.WireEdge,
@@ -72,7 +73,11 @@ export class DanglingEdgeService {
         targetPosition: points[points.length - 1],
         routingMode: 'manual',
         points,
-        data: { type: 'wire', wireId: randomShortId('W') },
+        data: {
+          type: 'wire',
+          wireId: randomShortId('W'),
+          visualPlane: defaultVisualPlane('conductor'),
+        },
       } satisfies Edge<WireEdgeData>,
     ]);
   }

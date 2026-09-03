@@ -59,3 +59,68 @@
   color: var(--ngd-txt-primary-default);
   word-break: break-word;
 }
+
+.color-row {
+  display: flex;
+  align-items: center;
+  gap: var(--ngd-primitive-4rule-8);
+}
+
+.color-swatch {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  border-radius: var(--ngd-token-radius-input-m);
+  border: var(--ngd-primitive-odd-1) solid var(--ngd-input-stroke-primary-default);
+}
+
+.color-warning {
+  margin: 0;
+  color: var(--ngd-txt-secondary-default);
+}
+
+.net-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ngd-primitive-4rule-8);
+  padding-block-start: var(--ngd-primitive-4rule-12);
+}
+
+// Same visual as the sidebar's footer actions, restated here because component
+// styles don't cross component boundaries.
+.action-button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--ngd-token-radius-button-m);
+  cursor: pointer;
+  padding: var(--ngd-token-spacing-button-m-v-pad-2);
+  transition: background 150ms ease;
+  background: transparent;
+  color: var(--ngd-txt-primary-default);
+  border: 1px solid var(--ngd-ui-stroke-primary-default);
+
+  &:hover:not([disabled]) {
+    border-color: var(--av-color-accent);
+    color: var(--av-color-accent);
+  }
+
+  &[aria-pressed='true'] {
+    border-color: var(--av-color-accent);
+    color: var(--av-color-accent);
+  }
+
+  &[disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.dim-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--ngd-primitive-4rule-8);
+  color: var(--ngd-txt-secondary-default);
+  cursor: pointer;
+}

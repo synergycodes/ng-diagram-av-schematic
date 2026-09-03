@@ -4,13 +4,28 @@
       class="reshape-overlay__handle"
       [class.is-horizontal]="h.axis === 'horizontal'"
       [class.is-vertical]="h.axis === 'vertical'"
+      [class.is-insert-only]="h.insertOnly"
       [style.left.px]="h.midpoint.x"
       [style.top.px]="h.midpoint.y"
       (pointerdown)="onPointerDown($event, h)"
-      aria-hidden="true"
+      (dblclick)="onSegmentDoubleClick($event, h)"
+      (keydown.enter)="onSegmentKeyboardInsert($event, h)"
+      (keydown.space)="onSegmentKeyboardInsert($event, h)"
+      role="button"
+      tabindex="0"
+      [attr.aria-label]="
+        h.insertOnly
+          ? 'Criar uma dobra com Enter'
+          : 'Arrastar o segmento ou criar uma dobra com Enter'
+      "
+      [title]="
+        h.insertOnly
+          ? 'Clique duas vezes para criar uma dobra'
+          : 'Arraste para mover; clique duas vezes para criar uma dobra'
+      "
     >
-      <!-- Drag-direction arrow: vertical (↕) by default for horizontal segments;
-           rotated to ↔ for vertical segments. Shown on hover / while dragging. -->
+      <!-- Drag-direction arrow: up/down by default for horizontal segments;
+           rotated left/right for vertical segments. Shown on hover / while dragging. -->
       <svg class="reshape-overlay__arrow" viewBox="0 0 24 24" fill="none">
         <path
           d="M12 4V20M12 4L8.5 7.5M12 4L15.5 7.5M12 20L8.5 16.5M12 20L15.5 16.5"
@@ -21,5 +36,23 @@
         />
       </svg>
     </span>
+  }
+
+  <!-- Bend (waypoint) handles: drag to move one bend, double-click to delete it. -->
+  @for (b of bendHandles(); track 'bend:' + b.edgeId + ':' + b.bendIndex) {
+    <span
+      class="reshape-overlay__bend"
+      [style.left.px]="b.point.x"
+      [style.top.px]="b.point.y"
+      (pointerdown)="onBendPointerDown($event, b)"
+      (dblclick)="onBendDoubleClick($event, b)"
+      (contextmenu)="onBendContextMenu($event, b)"
+      (keydown.delete)="onBendKeyboardRemove($event, b)"
+      (keydown.backspace)="onBendKeyboardRemove($event, b)"
+      role="button"
+      tabindex="0"
+      aria-label="Arrastar ou remover dobra"
+      title="Arraste para mover; clique duas vezes ou use o botão direito para remover"
+    ></span>
   }
 </div>

@@ -62,5 +62,21 @@
 
 <div class="form-section">
   <span class="h10 section-title">Ports</span>
-  <app-ports-editor [formField]="fieldTree.ports" />
+  @if (portsAreReadonly()) {
+    <p class="p10 physical-ports-note">
+      Os pinos físicos são definidos pelo footprint e acompanham a posição na placa.
+    </p>
+    <ul class="physical-ports-list">
+      @for (port of nodeData().ports; track port.id) {
+        <li class="p10">
+          <span>{{ port.label || port.id }}</span>
+          @if (port.hole; as hole) {
+            <span>L{{ hole.row + 1 }}-C{{ hole.col + 1 }}</span>
+          }
+        </li>
+      }
+    </ul>
+  } @else {
+    <app-ports-editor [formField]="fieldTree.ports" />
+  }
 </div>

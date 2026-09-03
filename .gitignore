@@ -37,6 +37,3 @@ yarn-error.log*
 .claude/
 .DS_Store
 
-# Fetched at build time from the hubspot-contact-form release (see deploy-to-azure.yml)
-/public/contact-form.js
-

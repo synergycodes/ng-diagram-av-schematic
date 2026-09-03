@@ -1,10 +1,45 @@
+@if (isBoardJumper()) {
+  <ng-diagram-base-edge [edge]="edge()" stroke="#000000" [strokeWidth]="3.5" />
+}
 <ng-diagram-base-edge [edge]="edge()" [stroke]="strokeColor()" [strokeWidth]="strokeWidth()">
-  <ng-diagram-base-edge-label id="wire-id-source" [positionOnEdge]="'30px'">
-    <span class="wire-label">{{ edge().data.wireId }}</span>
-  </ng-diagram-base-edge-label>
-  <ng-diagram-base-edge-label id="wire-id-target" [positionOnEdge]="'-30px'">
-    <span class="wire-label">{{ edge().data.wireId }}</span>
-  </ng-diagram-base-edge-label>
+  @if (!isInspected()) {
+    <ng-diagram-base-edge-label id="wire-id-source" [positionOnEdge]="'30px'">
+      <span class="wire-label" [class.is-dimmed]="isDimmed()">{{ edge().data.wireId }}</span>
+    </ng-diagram-base-edge-label>
+    <ng-diagram-base-edge-label id="wire-id-target" [positionOnEdge]="'-30px'">
+      <span class="wire-label" [class.is-dimmed]="isDimmed()">{{ edge().data.wireId }}</span>
+    </ng-diagram-base-edge-label>
+  } @else {
+    <!-- On-demand inspection chip: replaces the two id labels while the wire is
+         selected or its net is highlighted, so the canvas carries no permanent
+         metadata. -->
+    <ng-diagram-base-edge-label id="wire-inspection" [positionOnEdge]="'0px'">
+      <span class="wire-inspection" [style.transform]="inspectionTransform()">
+        <span class="wire-inspection__head">
+          <span
+            class="wire-inspection__swatch"
+            [style.background]="inspectionColor()"
+            aria-hidden="true"
+          ></span>
+          <span class="wire-inspection__id">{{ edge().data.wireId }}</span>
+        </span>
+        <span class="wire-inspection__endpoints">{{ endpointSummary() }}</span>
+        @if (inspectionFacts().length) {
+          <span class="wire-inspection__facts">
+            @for (fact of inspectionFacts(); track fact.label) {
+              <span class="wire-inspection__fact">
+                <span class="wire-inspection__fact-label">{{ fact.label }}</span>
+                {{ fact.value }}
+              </span>
+            }
+          </span>
+        }
+        @if (edge().data.notes) {
+          <span class="wire-inspection__note">{{ edge().data.notes }}</span>
+        }
+      </span>
+    </ng-diagram-base-edge-label>
+  }
 
   @for (endpoint of endpointHandles(); track endpoint.id) {
     <ng-diagram-base-edge-label [id]="endpoint.id" [positionOnEdge]="'0px'">

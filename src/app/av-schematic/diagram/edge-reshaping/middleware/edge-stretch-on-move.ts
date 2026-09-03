@@ -1,9 +1,11 @@
-import type { NgDiagramModelService, Point } from 'ng-diagram';
+import type { NgDiagramModelService, Node, Point } from 'ng-diagram';
 import {
   collapseCollinearBends,
   portFlowPosition,
   stretchPolylineWithBendInsertion,
 } from '../logic';
+import { isBoardJumperEdge } from '../../model/board-jumper';
+import { isBoardNode } from '../../model/guards';
 
 // Re-anchor manual edges to live ports after a node move. Skips edges not
 // incident to `movedNodeIds` before the per-edge probe (O(incident), not
@@ -16,8 +18,19 @@ export const applyEdgeStretchOnSelectionMoved = (
   modelService: NgDiagramModelService,
   movedNodeIds: ReadonlySet<string>,
   merge: boolean,
-): void => {
+): Promise<void> => {
   const patches: { id: string; points: Point[] }[] = [];
+  let boardsById: ReadonlyMap<string, Node> | undefined;
+  const boardNodeId = (boardId: string): string | undefined => {
+    boardsById ??= new Map(
+      modelService
+        .getModel()
+        .getNodes()
+        .filter(isBoardNode)
+        .map((node) => [node.data.boardId, node] as const),
+    );
+    return boardsById.get(boardId)?.id;
+  };
   // Committed model, not the edges() signal: this runs inside diagram event
   // handlers and right after awaited writes, where the signal still shows the
   // previous state (it refreshes on the next CD pass).
@@ -48,9 +61,51 @@ export const applyEdgeStretchOnSelectionMoved = (
     const targetDrifted =
       !!liveTarget &&
       (Math.abs(liveTarget.x - oldTarget.x) > 0.5 || Math.abs(liveTarget.y - oldTarget.y) > 0.5);
+
+    // Both endpoints and every bend of a jumper share one board-local frame.
+    // Translating by the owner's endpoint drift preserves the entire shape;
+    // the ordinary stretch algorithm is intentionally asymmetric and is for
+    // wires whose endpoints can move independently.
+    const jumperBoardId = isBoardJumperEdge(edge) ? edge.data.jumperBoardId : undefined;
+    if (typeof jumperBoardId === 'string' && movedNodeIds.has(boardNodeId(jumperBoardId) ?? '')) {
+      if (!sourceDrifted && !targetDrifted) continue;
+
+      const points = edge.points.map((point) => ({ ...point }));
+      if (liveSource && liveTarget && sourceDrifted && targetDrifted) {
+        const sourceDelta = {
+          x: liveSource.x - oldSource.x,
+          y: liveSource.y - oldSource.y,
+        };
+        const targetDelta = {
+          x: liveTarget.x - oldTarget.x,
+          y: liveTarget.y - oldTarget.y,
+        };
+        if (
+          Math.abs(sourceDelta.x - targetDelta.x) <= 0.5 &&
+          Math.abs(sourceDelta.y - targetDelta.y) <= 0.5
+        ) {
+          patches.push({
+            id: edge.id,
+            points: points.map((point) => ({
+              x: point.x + sourceDelta.x,
+              y: point.y + sourceDelta.y,
+            })),
+          });
+          continue;
+        }
+      }
+
+      // Measurements can settle one endpoint before the other. Re-anchor only
+      // what is available and never feed a free board-local polyline through
+      // the orthogonal wire simplifier.
+      if (sourceDrifted && liveSource) points[0] = { ...liveSource };
+      if (targetDrifted && liveTarget) points[points.length - 1] = { ...liveTarget };
+      patches.push({ id: edge.id, points });
+      continue;
+    }
     if (!sourceDrifted && !targetDrifted) {
       // Nothing to re-anchor. On finalize, fold any collinear bends the drag
-      // left behind — invisible to the rendered line, so the drop matches what
+      // left behind - invisible to the rendered line, so the drop matches what
       // the user saw.
       if (merge) {
         const collapsed = collapseCollinearBends(edge.points);
@@ -79,8 +134,9 @@ export const applyEdgeStretchOnSelectionMoved = (
     }
   }
   if (patches.length > 0) {
-    void modelService.updateEdges(patches);
+    return modelService.updateEdges(patches);
   }
+  return Promise.resolve();
 };
 
 // Returns null when the port isn't measured yet (transient mount state).

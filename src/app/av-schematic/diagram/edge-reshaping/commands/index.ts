@@ -4,4 +4,7 @@ export type {
   SetEdgeRouteCommand,
   ReshapeMoveCommand,
   ReshapeFinishCommand,
+  InsertBendCommand,
+  RemoveBendCommand,
+  MoveBendCommand,
 } from './types';

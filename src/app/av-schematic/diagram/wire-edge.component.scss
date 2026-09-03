@@ -8,9 +8,80 @@
   white-space: nowrap;
   user-select: none;
   pointer-events: none;
+
+  // Attenuated while another net is highlighted.
+  &.is-dimmed {
+    opacity: 0.35;
+  }
 }
 
-// Relink endpoint dot — a clean hollow ring at rest; glow + fill on hover/drag.
+// On-demand inspection chip. Rendered only while the wire is selected or its
+// net is highlighted (see wire-edge.component.html) -- the canvas stays clean
+// the rest of the time. Absolutely positioned and translated to the route's
+// midpoint by `inspectionTransform`.
+.wire-inspection {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-width: 220px;
+  padding: 6px 8px;
+  border: var(--ngd-primitive-odd-1) solid var(--av-color-accent);
+  border-radius: var(--ngd-token-radius-input-m);
+  background: var(--ngd-node-bg-primary-default);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 25%);
+  color: var(--ngd-txt-primary-default);
+  font-size: 10px;
+  line-height: 1.3;
+  user-select: none;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.wire-inspection__head {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.wire-inspection__swatch {
+  width: 9px;
+  height: 9px;
+  flex: none;
+  border-radius: 2px;
+  border: var(--ngd-primitive-odd-1) solid var(--ngd-ui-separator-primary-default);
+}
+
+.wire-inspection__id {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.wire-inspection__endpoints {
+  color: var(--ngd-txt-secondary-default);
+  white-space: nowrap;
+}
+
+.wire-inspection__facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 8px;
+}
+
+.wire-inspection__fact-label {
+  color: var(--ngd-txt-tertiary-default);
+  margin-inline-end: 3px;
+}
+
+.wire-inspection__note {
+  color: var(--ngd-txt-secondary-default);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+// Relink endpoint dot -- a clean hollow ring at rest; glow + fill on hover/drag.
 .wire-handle--endpoint {
   position: absolute;
   top: 0;

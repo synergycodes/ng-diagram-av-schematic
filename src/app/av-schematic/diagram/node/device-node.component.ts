@@ -9,10 +9,22 @@ import {
 import { PortFocusService } from '../port-focus.service';
 import { RelinkTargetHighlightService } from '../edge-relinking/relink-target-highlight.service';
 import { type DeviceNodeData, type DevicePort } from '../model/interfaces';
+import { DeviceIllustrationComponent } from '../../shared/ui/device-illustration/device-illustration.component';
+import {
+  resolveDeviceIllustration,
+  type DeviceIllustrationId,
+} from '../../shared/ui/device-illustration/device-illustration';
+
+/**
+ * Catalog illustrations are resolved from manufacturer/model and remain
+ * independent from the physical footprint model. Unknown/manual devices keep
+ * the generic card rendering.
+ */
+export type DeviceIllustration = DeviceIllustrationId;
 
 @Component({
   selector: 'app-device-node',
-  imports: [NgDiagramPortComponent],
+  imports: [NgDiagramPortComponent, DeviceIllustrationComponent],
   templateUrl: './device-node.component.html',
   styleUrl: './device-node.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -32,6 +44,10 @@ export class DeviceNodeComponent implements NgDiagramNodeTemplate<DeviceNodeData
   node = input.required<Node<DeviceNodeData>>();
 
   protected readonly data = computed(() => this.node().data);
+
+  protected readonly illustration = computed<DeviceIllustration>(() =>
+    resolveDeviceIllustration(this.data()),
+  );
 
   protected readonly inputPorts = computed(() => this.portsByDirection('input'));
   protected readonly outputPorts = computed(() => this.portsByDirection('output'));

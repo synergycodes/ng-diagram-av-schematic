@@ -1,9 +1,9 @@
 <aside class="sidebar" aria-labelledby="properties-sidebar-title">
   <app-sidebar-header
-    title="Properties"
+    title="Propriedades"
     titleId="properties-sidebar-title"
     iconClass="icon-sidebar"
-    ariaLabel="Toggle properties panel"
+    ariaLabel="Alternar painel de propriedades"
     tooltipPlacement="left"
     [subtitle]="headerSubtitle()"
     [isExpanded]="isExpanded()"
@@ -13,41 +13,105 @@
     <div class="sidebar-separator"></div>
     <div class="sidebar-content sidebar-enter">
       @if (state() === 'single-node' && selectedNode(); as node) {
-        <app-device-form [entityId]="node.id" [nodeData]="node.data" />
+        <app-device-form
+          [entityId]="node.id"
+          [nodeData]="node.data"
+          [readonlyPorts]="!!node.data.footprintId"
+        />
+      } @else if (state() === 'single-board' && selectedBoard(); as board) {
+        <section class="board-summary" aria-label="Placa selecionada">
+          <span class="field-label">Placa</span>
+          <strong>{{ board.data.label }}</strong>
+          <span>{{ board.data.rows }} x {{ board.data.cols }} furos</span>
+        </section>
+      } @else if (state() === 'single-junction' && selectedJunction(); as junction) {
+        <app-junction-form [nodeId]="junction.id" [nodeData]="junction.data" />
       } @else if (state() === 'single-edge' && selectedWireDetails(); as wire) {
         <app-wire-form
           [edgeId]="wire.edge.id"
           [edgeData]="wire.edge.data"
           [source]="wire.source"
           [target]="wire.target"
+          [netId]="wire.netId"
+          [netName]="wire.netName"
+          [netSize]="wire.netSize"
+          [jumperLength]="wire.jumperLength"
         />
       } @else if (state() === 'empty') {
         <app-sidebar-placeholder
-          title="No selection"
-          description="Select a device or wire on the canvas to view its properties."
+          title="Nenhuma seleção"
+          description="Selecione um dispositivo ou fio no canvas para ver suas propriedades."
         />
       } @else {
         <app-sidebar-placeholder
-          title="Multiple items selected."
-          description="Please select a single device or wire to view properties."
+          title="Vários itens selecionados"
+          description="Selecione apenas um dispositivo ou fio para ver suas propriedades."
         />
+      }
+      @if (selectedVisualElement(); as selected) {
+        <section class="visual-plane" aria-labelledby="visual-plane-label">
+          <label id="visual-plane-label" for="visual-plane-input">Plano visual</label>
+          <input
+            id="visual-plane-input"
+            type="number"
+            step="1"
+            [min]="minVisualPlane"
+            [max]="maxVisualPlane"
+            [value]="selected.visualPlane"
+            (change)="onVisualPlaneChange($event)"
+          />
+          <small>Números maiores aparecem acima. Isso não altera nets nem layers DXF.</small>
+        </section>
       }
     </div>
     @if (state() === 'single-node') {
       <div class="sidebar-actions">
         <button class="remove-button p10" type="button" (click)="onRemoveNode()">
-          Remove device
+          Remover dispositivo
+        </button>
+      </div>
+    } @else if (state() === 'single-board') {
+      <div class="sidebar-actions">
+        @if (selectedBoard(); as board) {
+          @if (board.data.surface === 'breadboard') {
+            <button class="action-button p10" type="button" (click)="onToggleJumperCreation()">
+              {{
+                jumperCreation.activeBoardId() === board.data.boardId
+                  ? 'Cancelar jumper'
+                  : 'Adicionar jumper'
+              }}
+            </button>
+            @if (jumperCreation.activeBoardId() === board.data.boardId) {
+              <small>Selecione dois furos da protoboard. Pressione Escape para cancelar.</small>
+              @if (jumperCreation.status(); as status) {
+                <small class="jumper-status" role="alert">{{ status }}</small>
+              }
+            }
+          }
+        }
+        <button class="remove-button p10" type="button" (click)="onRemoveBoard()">
+          Remover placa
+        </button>
+      </div>
+    } @else if (state() === 'single-junction') {
+      <div class="sidebar-actions">
+        <button class="remove-button p10" type="button" (click)="onRemoveJunction()">
+          Remover junção
         </button>
       </div>
     } @else if (state() === 'single-edge' && selectedWireDetails(); as wire) {
       <div class="sidebar-actions">
         @if (wire.edge.routingMode === 'manual') {
           <button class="action-button p10" type="button" (click)="onResetWireRouting()">
-            Reset routing
+            @if (wire.edge.data.jumperBoardId) {
+              Restaurar rota direta
+            } @else {
+              Restaurar rota automática
+            }
           </button>
         }
         <button class="remove-button p10" type="button" (click)="onRemoveWire()">
-          Remove wire
+          Remover fio
         </button>
       </div>
     }

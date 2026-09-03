@@ -1,0 +1,253 @@
+:host {
+  display: block;
+  position: relative;
+  cursor: grab;
+
+  --board-hole-fill: var(--av-color-board-hole, #2b2118);
+
+  &:active {
+    cursor: grabbing;
+  }
+
+  // Board ports draw their own hit target; suppress ng-diagram's default dot so
+  // the grid stays readable at 168 ports on a 6 x 28 board.
+  ng-diagram-port {
+    --ngd-port-size: 0;
+    --ngd-port-background-color: transparent;
+    --ngd-port-border-size: 0;
+  }
+}
+
+.board-node {
+  position: relative;
+  background: var(--av-color-board-surface, #c9a06a);
+  border: 1px solid var(--ngd-ui-stroke-primary-default);
+  border-radius: var(--ngd-token-radius-element-12);
+  box-shadow: none;
+
+  :host(.selected) & {
+    border-color: var(--av-color-selection-border);
+    box-shadow: 0 0 0 3px var(--av-color-selection-halo);
+  }
+}
+
+// A solderless breadboard is a moulded block of light plastic, not a drilled
+// brown substrate: everything below repaints the same geometry for that body.
+// Scoping it to this modifier is what keeps a perfboard looking untouched.
+.board-node--breadboard {
+  background: var(--av-color-breadboard-surface, #faf8f4);
+
+  --board-hole-fill: var(--av-color-breadboard-hole, #d4cfc7);
+
+  .board-node__hole {
+    stroke: var(--av-color-breadboard-hole-stroke, #b8b2a8);
+    opacity: 1;
+  }
+
+  .board-node__hole--positive {
+    stroke: var(--av-color-bus-positive, #cc6666);
+  }
+
+  .board-node__hole--negative {
+    stroke: var(--av-color-bus-negative, #6666cc);
+  }
+
+  // The channel is a groove moulded into the plastic, so it reads as a recess
+  // rather than as a hole through the board.
+  .board-node__center-gap {
+    fill: var(--av-color-breadboard-channel, rgb(0 0 0 / 13%));
+    opacity: 1;
+  }
+
+  .board-node__row-mark,
+  .board-node__column-tick {
+    fill: var(--av-color-breadboard-marking, #b0a898);
+    opacity: 1;
+  }
+
+  .board-node__row-mark--positive {
+    fill: var(--av-color-bus-positive, #cc6666);
+    font-weight: 700;
+  }
+
+  .board-node__row-mark--negative {
+    fill: var(--av-color-bus-negative, #6666cc);
+    font-weight: 700;
+  }
+}
+
+.board-node__rail-band {
+  stroke: none;
+}
+
+.board-node__rail-band--positive {
+  fill: var(--av-color-breadboard-rail-positive, #fff2f2);
+}
+
+.board-node__rail-band--negative {
+  fill: var(--av-color-breadboard-rail-negative, #f2f2ff);
+}
+
+.board-node__label {
+  position: absolute;
+  top: -20px;
+  left: 0;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ngd-txt-secondary-default);
+  white-space: nowrap;
+  user-select: none;
+
+  &--with-notes {
+    top: -34px;
+  }
+}
+
+.board-node__notes {
+  position: absolute;
+  top: -19px;
+  left: 0;
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--ngd-txt-secondary-default);
+  font-size: 9px;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.board-node__grid {
+  display: block;
+  position: absolute;
+  inset: 0;
+}
+
+.board-node__center-gap {
+  fill: var(--av-color-board-channel, #5b6579);
+  opacity: 0.62;
+}
+
+.board-node__trace-run {
+  stroke-linecap: round;
+  opacity: 0.55;
+}
+
+.board-node__trace-dot {
+  opacity: 0.75;
+  stroke: none;
+}
+
+.board-node__trace-bridge {
+  stroke-width: 1.5;
+  stroke-dasharray: 3 3;
+  opacity: 0.7;
+  fill: none;
+}
+
+// Copper sealed inside the body - a breadboard's column clips and buses - is
+// not drawn at all (see `exposedTraces`), so there is no `--internal` rule
+// here: the plastic hides it exactly as the hardware does.
+
+.board-node__bus-guide {
+  opacity: 0.75;
+  fill: none;
+}
+
+.board-node__bus-guide--positive {
+  stroke: var(--av-color-bus-positive, #cc6666);
+}
+
+.board-node__bus-guide--negative {
+  stroke: var(--av-color-bus-negative, #6666cc);
+}
+
+.board-node__row-mark,
+.board-node__column-tick {
+  fill: var(--av-color-board-marking, #4a3520);
+  font-weight: 600;
+  opacity: 0.7;
+  user-select: none;
+  dominant-baseline: middle;
+}
+
+.board-node__column-tick {
+  text-anchor: middle;
+}
+
+.board-node__hole {
+  fill: var(--board-hole-fill);
+  stroke: none;
+  opacity: 0.8;
+}
+
+.board-node__hole--conflicted {
+  fill: var(--av-color-error, #d92d20);
+  opacity: 1;
+}
+
+.board-node--jumper-mode {
+  .board-node__port-hit {
+    cursor: crosshair;
+  }
+
+  .board-node__hole--jumper-source {
+    fill: var(--av-color-accent);
+    stroke: #000;
+    stroke-width: 3px;
+  }
+}
+
+.board-node--breadboard .board-node__hole--conflicted {
+  fill: var(--av-color-error, #d92d20);
+  stroke: var(--av-color-error, #d92d20);
+}
+
+.board-node__trace-label {
+  position: absolute;
+  font-size: 9px;
+  line-height: 1;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 2px 3px;
+  border-radius: 3px;
+  background: rgb(255 255 255 / 88%);
+  color: #1f2937;
+  text-shadow: 0 1px 0 rgb(255 255 255 / 70%);
+  white-space: nowrap;
+  user-select: none;
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+
+// The port box's left edge sits exactly on the point it represents, so
+// portFlowPosition() (left edge, vertical centre) resolves to the hole centre
+// with no correction anywhere else. Only the visual dot is nudged back.
+.board-node__port {
+  position: absolute;
+  display: block;
+}
+
+.board-node__port-hit {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  transform: translateX(-50%);
+  background: transparent;
+  transition: background 120ms ease;
+
+  &:hover {
+    background: color-mix(in srgb, var(--av-color-accent) 45%, transparent);
+  }
+}
+
+.board-node__port-hit--trace {
+  border-radius: 3px;
+  opacity: 0.9;
+
+  &:hover {
+    opacity: 1;
+    outline: 2px solid var(--av-color-selection-border);
+  }
+}

@@ -4,3 +4,55 @@
   height: 100vh;
   width: 100%;
 }
+
+.wire-pick-control {
+  position: absolute;
+  left: 50%;
+  bottom: 16px;
+  z-index: 20;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border: 1px solid var(--ngd-ui-stroke-primary-default);
+  border-radius: var(--ngd-token-radius-button-m);
+  background: var(--ngd-ui-bg-primary-default);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 18%);
+  color: var(--ngd-txt-secondary-default);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+  pointer-events: auto;
+  transform: translateX(-50%);
+
+  span {
+    padding: 1px 5px;
+    border: 1px solid var(--ngd-ui-stroke-primary-default);
+    border-radius: 4px;
+    background: var(--ngd-ui-bg-tertiary-default);
+    font-size: 10px;
+  }
+
+  &:hover,
+  &:focus-visible,
+  &--active {
+    border-color: var(--av-color-selection-border);
+    color: var(--ngd-txt-primary-default);
+    outline: none;
+  }
+
+  &--active {
+    box-shadow: 0 0 0 3px var(--av-color-selection-halo);
+  }
+}
+
+// The opt-in pick mode temporarily removes only node hit targets. Edges and
+// their reshape/relink handles remain interactive, while every ordinary click,
+// port and overlay menu keeps its normal behavior as soon as Alt is released
+// or the one-shot button completes a selection gesture.
+.wire-pick-active {
+  ::ng-deep ng-diagram-node .node-content,
+  ::ng-deep ng-diagram-node .node-content * {
+    pointer-events: none !important;
+  }
+}

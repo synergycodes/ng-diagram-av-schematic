@@ -1,39 +1,53 @@
-# ngDiagram AV Schematic Template
+# Talus Wiring Editor
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](https://opensource.org/licenses/MIT)
 
-**Live demo:** [ngdiagram.dev/templates/av](https://www.ngdiagram.dev/templates/av/)
+Editor visual para documentar fiação física, placas, componentes, conectores e
+nets multi-drop. A aplicação usa Angular 21 e
+[ng-diagram](https://www.npmjs.com/package/ng-diagram), mantém um formato de
+projeto canônico e oferece importação/exportação WireViz.
 
-![AV schematic editor — drag a device from the library, rename a port, wire the new device to it, reshape the wire, edit its labels, export](docs/assets/demo.gif)
+O repositório nasceu como fork do template AV Schematic da Synergy Codes, mas
+o produto, o tracker e a implantação atuais pertencem ao Talus. O tracer
+bullet da issue #1 foi estendido pela issue #2 com nets multi-drop,
+junções/trilhos explícitos, projeto canônico v2 e round-trip WireViz; a issue
+#3 acrescenta placas arbitrárias e footprints encaixáveis no mesmo canvas.
+Consulte [`docs/wiring-tracer-bullet.md`](docs/wiring-tracer-bullet.md),
+[`docs/wireviz-round-trip.md`](docs/wireviz-round-trip.md),
+[`docs/physical-footprints.md`](docs/physical-footprints.md) e
+[`docs/license-matrix.md`](docs/license-matrix.md).
 
-Interactive AV (audio/video) schematic diagram built with Angular 21 and [ngDiagram](https://www.ngdiagram.dev/). Use this project as a starting point for AV system design — building your own schematic, signal-flow, or device-wiring diagram. Lean dependencies: Angular, ngDiagram, and [html-to-image](https://www.npmjs.com/package/html-to-image) (for PNG export) — no opinionated third-party UI libraries.
+![Demonstração do editor AV: adição de dispositivo, edição de porta, ligação, roteamento e exportação](docs/assets/demo.gif)
 
-Features:
+## Recursos
 
-- **Device nodes** — header (device ID, manufacturer, model) with input ports on the left and output ports on the right; each port shows its connector type (XLR, HDMI, Speakon, …)
-- **Wires** — orthogonal edges with the wire ID labelled near both ends, plus selection and connected-wire highlight states
-- **Manual wire routing** — drag a midpoint handle of a selected wire to slide a segment or pull an L-bend out of it; endpoints follow node moves while interior bends stay put; grid snap follows the node-drag snap setting; **Reset routing** in the sidebar restores ngDiagram's auto route — see [`docs/edge-reshaping.md`](docs/edge-reshaping.md)
-- **Relink wires** — drag an endpoint grip of a selected wire onto another port to reconnect it, or into empty space to leave it dangling
-- **Dangling wires** — drawing from a port into empty space keeps a one-ended wire stub instead of discarding it
-- **Port navigation** — double-click a port to pan to the device on the other end of the wire
-- **Properties sidebar** — edit device and wire fields with live updates, including an inline ports editor (add, remove, reorder, flip direction, pick a connector type)
-- **Device library** — collapsible palette of device templates (microphones, mixers, amplifiers, loudspeakers, displays, cameras, switchers, …) you drag onto the canvas; search with match highlighting; add, edit, or remove your own templates with a save-or-discard buffer
-- **Auto device IDs** — a dropped device gets the next free ID for its category prefix (`MIC-1`, `CAM-1`, `DEV-1` for unmapped categories); the category field is an editable combobox (pick from the list or type your own)
-- **Minimap** with zoom controls, and a dark/light theme
-- **Export** to PNG (raster, theme-aware) and DXF (vector — opens in AutoCAD, BricsCAD, LibreCAD) from the top navbar — see [`docs/export.md`](docs/export.md)
+- Nós de dispositivo com identificação, fabricante, modelo e portas de entrada e saída.
+- Fios ortogonais com identificação nas duas extremidades, seleção e destaque da net conectada.
+- Roteamento manual por segmentos e dobras, com snap configurável e restauração da rota automática.
+- Reconexão de extremidades para outra porta ou para uma posição solta no canvas.
+- Criação de fios pendentes ao desenhar de uma porta para uma área vazia.
+- Navegação por duplo clique na porta até o dispositivo conectado.
+- Painel de propriedades com edição ao vivo de dispositivos, junções e fios.
+- Biblioteca arrastável de componentes, com busca, inclusão, edição, remoção e rascunhos descartáveis.
+- Geração automática de `deviceId` por prefixo de categoria e menor número livre.
+- Minimap, controles de zoom e temas claro e escuro.
+- Exportação para PNG e DXF pela barra superior.
+- Nets WireViz multi-drop derivadas por conectividade, sem tratar fan-out como colisão de porta
+- Junções e trilhos selecionáveis e editáveis no canvas, com taps visuais separados da semântica elétrica
+- Projeto canônico v2 persistido pela API local de mesma origem, com migração endurecida de snapshots v1 e inventário de cabos desconectados
+- Importação de arquivo YAML, fixture multi-drop, exportação WireViz e relatório global acessíveis pela barra superior
+- Round-trip WireViz clean-room com `pinlabels`, `wirelabels`, referências sem ambiguidade, loops internos e RGB exato de seis dígitos
 
-## Getting Started
+## Primeiros passos
 
-Built against Angular 21.2 and ngDiagram 1.3 (see `package.json`); Node.js 20.19+ or 22.12+ and npm 10+.
+**Pré-requisitos:** Node.js 20.19+ ou 22.12+ e npm 10+.
 
 ```bash
-git clone https://github.com/synergycodes/ng-diagram-av-schematic.git
-cd ng-diagram-av-schematic
 npm install
 npm start
 ```
 
-Open [http://localhost:4200](http://localhost:4200) — a sample rig of 7 devices and 7 wires loads. Try dragging a device from the left library onto the canvas, wiring two ports, then selecting a wire and dragging one of its midpoint handles. The rig and the device library are sample data — replace them in [`diagram/data.ts`](src/app/av-schematic/diagram/data.ts) and [`library-sidebar/seed-library.ts`](src/app/av-schematic/library-sidebar/seed-library.ts).
+Acesse [http://localhost:4200](http://localhost:4200).
 
 ## Scripts
 
@@ -42,19 +56,37 @@ Open [http://localhost:4200](http://localhost:4200) — a sample rig of 7 device
 | `npm start` | Start dev server with hot reload |
 | `npm run build` | Production build to `dist/` |
 | `npm test` | Run unit tests via Vitest (`@angular/build:unit-test` builder) |
+| `npm run test:server` | Run the local server contract tests via `Vitest` |
 | `npm run format` | Format with Prettier |
 | `npm run format:check` | Check formatting (used by CI) |
 | `npm run lint` | Run ESLint; `--max-warnings=0` so any warning fails CI |
 | `npm run lint:fix` | Run ESLint with autofix |
 | `npm run type-check` | `tsc -b --noEmit` — type-check both app and spec configs via project references |
 
+CI (`.github/workflows/build-on-pr.yml`) runs in order: `format:check` → `lint` → `type-check` → `test` → `test:server` → `build`, failing fast on the cheap checks before paying for the expensive ones.
+
+## Implantação no Talus
+
+O fork não publica em Azure nem em domínio público do projeto upstream. A
+implantação privada usa uma release imutável no Talus, backend em loopback e
+HTTPS restrito à Tailnet por Tailscale Serve. O contrato, os caminhos e as
+proteções ficam em [`docs/local-service.md`](docs/local-service.md). Credenciais
+e configuração do host permanecem fora deste repositório.
+
 ## Documentation
 
 Deep-dive documentation lives in [`docs/`](docs/):
 
 - [`docs/architecture.md`](docs/architecture.md) — service hierarchy, key patterns, project structure
-- [`docs/edge-reshaping.md`](docs/edge-reshaping.md) — manual wire routing, endpoint relinking, and dangling-wire creation: how the three features split, and which parts are meant to move into ngDiagram
+- [`docs/dependency-triage.md`](docs/dependency-triage.md) — advisories observados, alcance e plano de atualização controlada
+- [`docs/edge-reshaping.md`](docs/edge-reshaping.md) — roteamento manual, reconexão de endpoints, fios pendentes e separação entre as três funcionalidades
 - [`docs/export.md`](docs/export.md) — PNG and DXF export pipelines
+- [`docs/physical-footprints.md`](docs/physical-footprints.md) — placas, footprints, encaixe, ocupação, persistência v2 e limites da autoria física
+- [`docs/wiring-tracer-bullet.md`](docs/wiring-tracer-bullet.md) — issue #1: representação de placa/componente/net física, formato canônico de projeto, o que está pendente ou fora de escopo
+- [`docs/wireviz-import-limits.md`](docs/wireviz-import-limits.md) — o subconjunto de YAML WireViz que o parser desta fatia aceita
+- [`docs/wireviz-round-trip.md`](docs/wireviz-round-trip.md) — projeto canônico v2, multi-drop, relatório e equivalência elétrica
+- [`docs/license-matrix.md`](docs/license-matrix.md) — origem, revisão, licença e estratégia de reuso para cada base avaliada para este fork
+- [`docs/local-service.md`](docs/local-service.md) — o serviço local estático+API (`server/`) e o contrato de implantação no Talus
 
 ## ngDiagram APIs Demonstrated
 
@@ -186,11 +218,29 @@ Each wire edge needs:
 
 The left panel holds **device templates** — recipes without `id` or `position` that become nodes when dragged onto the canvas. `<ng-diagram>` handles the drop itself; the app only fills in a missing `deviceId`.
 
-- **Bundled templates** — [`library-sidebar/seed-library.ts`](src/app/av-schematic/library-sidebar/seed-library.ts). Each entry is `{ libraryId, template }` with a stable `libraryId`, an empty `deviceId` (generated on drop), and realistic `manufacturer` / `model` / `category` / `ports`. Or add one in the app with **+ Add device** at the bottom of the list.
-- **Categories and ID prefixes** — [`diagram/model/device-categories.ts`](src/app/av-schematic/diagram/model/device-categories.ts) maps each category to its prefix (`microphone` → `MIC`, `camera` → `CAM`, …); add an entry and both the category combobox and the ID generator pick it up. Unmapped categories fall back to `DEV-N`. The generator itself is [`diagram/model/auto-device-id.ts`](src/app/av-schematic/diagram/model/auto-device-id.ts): the smallest free number for that prefix.
-- **Search** — [`library-sidebar/components/library-search/`](src/app/av-schematic/library-sidebar/components/library-search/): 150 ms debounce, case-insensitive match on manufacturer or model. The filtering lives in `filteredDevices` in [`library-sidebar/library.service.ts`](src/app/av-schematic/library-sidebar/library.service.ts).
-- **Row and drag preview** — [`library-sidebar/components/library-list-item/`](src/app/av-schematic/library-sidebar/components/library-list-item/): each row is an `<ng-diagram-palette-item>` with a custom `<ng-diagram-palette-item-preview>` ghost card.
-- **Add / edit form** — [`library-sidebar/components/library-detail/`](src/app/av-schematic/library-sidebar/components/library-detail/) reuses the device form from the properties sidebar. Edits go to a draft ([`library-draft.service.ts`](src/app/av-schematic/library-sidebar/library-draft.service.ts)) until **Save**; **Back** discards it. Instance-only fields (`deviceId`, `location`) are hidden through `DEVICE_FORM_HIDDEN_FIELDS`.
+| File | Purpose |
+|---|---|
+| `library-sidebar/seed-library.ts` | Initial set of templates. Each entry is `{ libraryId, template: DeviceNodeData }`. `deviceId` and `location` are kept empty — they're instance fields, not template fields |
+| `library-sidebar/library.service.ts` | Estado da página: `devices`, expansão, edição, busca e persistência. `restoreDefaults()` repõe os seeds atuais sem remover componentes personalizados |
+| `library-sidebar/library-storage.ts` | Persistência `localStorage` v1. Recupera entradas válidas individualmente, remove entradas corrompidas/duplicadas e preserva um catálogo vazio intencional |
+| `library-sidebar/library-draft.service.ts` | Per-detail-session draft buffer. While the detail view is open, every form change writes here (not to the library). **Save** commits via `LibraryService.commitDraft`; **Back** simply tears the component down and the draft with it |
+| `library-sidebar/components/library-list-item/*` | Cada linha combina o item arrastável, a ilustração, a categoria localizada e notas visíveis. `HighlightSegmentsPipe` destaca os trechos encontrados |
+| `library-sidebar/components/library-search/*` | Busca com debounce de 150 ms por fabricante, modelo, categoria, notas e rótulos de pino, sem diferenciar maiúsculas, minúsculas ou diacríticos. O termo permanece ao abrir um detalhe e voltar |
+| `library-sidebar/components/library-detail/*` | Reuses `<app-device-form>` with a local `DeviceFormService` provider and an overridden `ON_DEVICE_FIELD_CHANGE` token that writes to the draft service. Hides `deviceId` and `location` by providing `DEVICE_FORM_HIDDEN_FIELDS = ['deviceId', 'location']` |
+| `diagram/model/device-categories.ts` | Canonical category dictionary — `DEVICE_CATEGORY_PREFIXES` (`microphone` → `MIC`, `camera` → `CAM`, …), `DEVICE_CATEGORIES` (the keys, used by the combobox), `FALLBACK_DEVICE_PREFIX = 'DEV'` |
+| `diagram/model/auto-device-id.ts` | `generateDeviceId(category, existingNodes)` — returns `<PREFIX>-<N>` where `N` is the smallest positive integer not already in use by a device of that prefix. Called from `(paletteItemDropped)` in `DiagramComponent` |
+
+**Adding a category.** Add an entry to `DEVICE_CATEGORY_PREFIXES` in `device-categories.ts` and the combobox plus the ID generator pick it up automatically. Unmapped categories fall through to `DEV-N`.
+
+**Adição de entradas.** Acrescente os padrões a `SEED_LIBRARY` em `seed-library.ts`, com `libraryId` estável, `deviceId` vazio (gerado automaticamente no drop) e dados realistas. Para um item apenas local, use **+ Adicionar componente** no rodapé da lista.
+
+O storage v1 mantém o catálogo salvo pelo usuário sem fazer merge automático com os seeds, inclusive quando a lista salva é `[]`. A ação visível **Restaurar padrões** repõe os seis seeds da versão atual, descarta apenas edições ou remoções locais desses ids e mantém os componentes personalizados `lib-custom-*`; portanto, ela também aplica correções e novas entradas adicionadas posteriormente a `SEED_LIBRARY` sem apagar criações do usuário.
+
+**Why `paletteItemDropped`?** ng-diagram's `<ng-diagram>` registers `PaletteDropDirective` automatically — the drop creates a node from the palette item's `data` without any wiring on our side. We only listen to the event so we can auto-assign a `deviceId` if the template's was empty (which is the default for library entries).
+
+### Editable category combobox
+
+`shared/ui/combobox/combobox.component.*` — a `FormValueControl<string>` so it slots into existing `[formField]` bindings. Visual structure mirrors the orgchart project's combobox (bordered trigger wrapping a transparent input + caret button, listbox panel with the project's `--ngd-token-spacing-dropdown-*` and `--ngd-input-stroke-primary-*` tokens). Behavior is the editable variant: typed values that aren't in the list are kept as-is. `filterText` is held separately from `value` so opening the panel always shows all options — typing narrows the list. Used for the device-form's `category` field.
 
 ### Theming
 
@@ -220,16 +270,15 @@ Global stylesheet entry point: `src/styles.css` (imports `tokens.css`, typograph
 
 For comprehensive ngDiagram documentation, examples, and API reference, visit: **[ngdiagram.dev/docs](https://www.ngdiagram.dev/docs)**
 
-## Support
+## Suporte
 
-- **Issues**: [GitHub Issues](https://github.com/synergycodes/ng-diagram-av-schematic/issues)
-- **ngDiagram Discussions**: [GitHub Discussions](https://github.com/synergycodes/ng-diagram/discussions), [Discord](https://discord.gg/FDMjRuarFb)
-- **ngDiagram Documentation**: [ngdiagram.dev/docs](https://www.ngdiagram.dev/docs)
+- **Issues do fork:** [felipedruzian/talus-wiring-editor](https://github.com/felipedruzian/talus-wiring-editor/issues)
+- **Biblioteca ngDiagram:** [documentação](https://www.ngdiagram.dev/docs), [discussões](https://github.com/synergycodes/ng-diagram/discussions) e [Discord](https://discord.gg/FDMjRuarFb)
 
-## License
+## Origem e licença
 
-MIT — see [LICENSE](LICENSE).
-
----
-
-Built with ❤️ by the [Synergy Codes](https://www.synergycodes.com/) team
+Este fork deriva do
+[ng-diagram AV Schematic Template](https://github.com/synergycodes/ng-diagram-av-schematic),
+da Synergy Codes. A matriz de origem, revisão e estratégia de reuso está em
+[`docs/license-matrix.md`](docs/license-matrix.md). O código permanece sob a
+licença MIT descrita em [`LICENSE`](LICENSE).

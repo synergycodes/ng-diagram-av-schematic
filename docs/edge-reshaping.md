@@ -1,137 +1,120 @@
-# Edge reshaping, linking & relinking
+# Edição de rotas e endpoints de fios
 
-Wires in the AV schematic are orthogonal edges the user can reshape, draw out to
-nothing (dangling), and reconnect to other ports. These are **three separate
-features**. Reshaping is the one structured as ngDiagram's pipeline
-(interaction → command → middleware → model) so it can move into core; relinking
-and dangling-edge creation are self-contained features that share only the pure
-geometry.
+Os fios globais do canvas são arestas ortogonais; jumpers da protoboard são
+polilinhas livres, inicialmente retas. Ambos podem ser editados e reconectados,
+mas somente fios globais podem ficar com uma extremidade solta. São três funcionalidades separadas: a
+edição de rota segue o pipeline interação → comando → middleware → modelo; a
+reconexão e a criação de fios pendentes mantêm ciclos próprios e compartilham
+somente a geometria pura.
 
-```
+Há duas formas de roteamento:
+
+- automático: o `ng-diagram` calcula o traçado e o projeto não persiste pontos;
+- manual: a ligação possui `routingMode: 'manual'` e uma lista explícita de
+  `points` em `layout.conductors` do `CanonicalProjectV4` para fios globais;
+- jumper local: `boardJumper` persiste apenas `boardId` e as dobras intermediárias
+  locais; os endpoints continuam derivados dos furos.
+
+A rota pertence ao condutor selecionado. Restaurar um fio global remove
+`routingMode` e `points`; restaurar um jumper remove suas dobras e volta à reta
+entre os dois furos. Cor, owner, metadados, endpoints e as demais ligações da net
+permanecem intactos.
+
+## Interações disponíveis
+
+Ao selecionar um fio, o overlay apresenta controles de segmento e de dobra:
+
+- arrastar o controle no meio de um segmento desloca o segmento no eixo
+  perpendicular;
+- clicar duas vezes em um segmento, ou usar `Enter`/`Espaço` no controle,
+  insere um desvio ortogonal com novas dobras;
+- arrastar o controle de uma dobra desloca o vértice e os trechos incidentes;
+- clicar duas vezes, usar o botão direito, `Delete` ou `Backspace` em uma dobra
+  remove o menor conjunto de vértices que ainda mantém a rota ortogonal;
+- arrastar o anel de uma extremidade vincula o fio a outra porta ou deixa a
+  extremidade solta quando ela é liberada no fundo do canvas.
+
+O snap usa a mesma configuração da grade aplicada aos nodes. Com snap ativo,
+dobras, segmentos e extremidades soltas são alinhados à grade; com snap
+desativado, o movimento permanece livre.
+
+No jumper, cada segmento oferece inserção de uma dobra livre e cada ponto
+intermediário pode ser arrastado ou removido. O gesto preserva a polilinha sem
+ortogonalizá-la e não aplica o grid global. Arraste de node, dobra, segmento ou
+endpoint abre um único grupo de histórico; todos os frames do gesto viram um só
+passo de undo.
+
+## Nova ancoragem e simplificação
+
+Mover um componente ou uma junção não recalcula todo o caminho manual. O
+middleware `edge-stretch-on-move` relê a posição atual da porta, ancora a
+extremidade e preserva os trechos internos válidos. Quando necessário, ele
+insere uma dobra em L junto à porta para evitar uma diagonal.
+
+O relink segue a mesma regra: o caminho é reconstruído a partir dos pontos do
+início do gesto, portanto erros não se acumulam a cada evento de ponteiro. A
+simplificação acontece somente no fim do gesto, quando dobras colineares e
+passagens redundantes podem ser removidas sem mudar a prévia mostrada.
+
+A tolerância de coordenadas e a normalização são compartilhadas por três
+fronteiras:
+
+- geometria interativa em `edge-reshaping/logic`;
+- parser e serializador canônicos do cliente;
+- validador do serviço local.
+
+O módulo comum `diagram/model/persisted-wire-route.mjs` impede que uma rota
+produzida pelo editor seja recusada ao salvar ou abrir. Uma rota v2 manual sem
+ao menos dois pontos é inválida. Em snapshots v1, pontos ortogonais antigos sem
+`routingMode` são recuperados como rota manual; somente uma geometria legada
+malformada é descartada, fazendo aquela ligação voltar ao automático sem
+rejeitar o projeto inteiro.
+
+## Organização
+
+```text
 diagram/
-├── edge-reshaping/            reshaping feature (pipeline) + shared geometry
-│   ├── directives/            gesture detection      pointer capture → start/move/end
-│   ├── handlers/              gesture → command       own drag state, dispatch commands
-│   ├── commands/              command + dispatcher    reshaping's only model-write surface
-│   ├── middleware/            cross-cutting           node-move re-anchor (edge-stretch-on-move)
-│   ├── logic/                 pure fns + types        shared geometry — no model access, unit-tested
-│   └── edge-reshape-overlay.component.*               thin UI host: renders handles → handler
-│
-├── edge-relinking/            separate feature — drag an endpoint to reconnect / dangle
-│   ├── relink-endpoint.handler.ts          owns the gesture + its own model writes
-│   ├── relink-handle.directive.ts          endpoint-grip pointer capture
-│   └── relink-target-highlight.service.ts  hovered-port highlight signal
-│
-└── dangling-edge-creation/    separate, AV-specific feature — draw a port into empty space
-    ├── dangling-edge.service.ts            on edgeDrawEnded(noTarget) → add a one-ended wire
-    └── temp-edge-points.service.ts         captures the live preview's bends for that wire
+├── edge-reshaping/
+│   ├── directives/       captura de gestos
+│   ├── handlers/         estado do gesto e tradução para comandos
+│   ├── commands/         única superfície de escrita da edição de rota
+│   ├── middleware/       nova ancoragem quando os nós se movem
+│   ├── logic/            geometria ortogonal pura
+│   └── edge-reshape-overlay.component.*
+├── edge-relinking/       arraste e reconexão de extremidades
+└── dangling-edge-creation/ criação de ligação com uma ponta solta
 ```
 
-`edge-reshaping/logic/` is a leaf (imported by every layer and by the other two
-features, importing none) — the unit intended to lift into core. Reshaping's
-data flow: a **directive** captures the pointer → a **handler** owns the drag
-state and dispatches a typed `EdgeCommand` → the **commands/** dispatcher is the
-single place reshaping calls `NgDiagramModelService.updateEdge(s)`. Relinking and
-dangling creation do their **own** writes directly (they are not on the command
-pipeline); they depend on reshaping only for `logic/`.
+O diretório `logic/` não acessa DOM nem modelo. Os handlers controlam o gesto e
+o dispatcher aplica comandos tipados ao `NgDiagramModelService`. Relink e
+criação de ponta solta mantêm seus próprios ciclos de escrita, mas reutilizam
+as mesmas funções puras de snap, posição de porta e reconstrução ortogonal.
 
-Manual-routed edges (`routingMode: 'manual'`, explicit `points`) own their path;
-auto edges are routed by ngDiagram. All three features pin edges to `manual`.
+## Cobertura de regressão
 
-## Reshaping
+Arestas com `routingMode: 'manual'` e `points` explícitos são responsáveis pelo
+próprio caminho; arestas automáticas são roteadas pelo ngDiagram. As três
+funcionalidades fixam a aresta no modo manual quando passam a controlar sua
+geometria.
 
-`EdgeReshapeOverlayComponent` is a single overlay layered over the canvas (not
-handles embedded per-edge): its inner layer is transformed by the viewport
-`translate · scale`, and it renders a midpoint handle on every orthogonal
-segment of every selected edge. Dragging a handle slides that segment
-perpendicular to its axis.
+Os testes exercitam inserção, deslocamento e remoção de dobras, snap, redução
+de segmentos redundantes, relink, nova ancoragem ao mover nós e persistência da
+rota no condutor correspondente. Os testes canônicos e do serviço também
+cobrem o contrato `manual + points`, a tolerância compartilhada e a migração
+segura de projetos v1.
 
-- **Snapping is config-driven** — the grid is resolved per gesture via
-  `resolveEdgeGrid`; when snapping is off it returns `null` and the segment moves
-  freely. The geometry takes the grid as an argument (`null` = no snap), so the
-  pure layer never assumes snapping is on.
-- **Port anchoring** — a first/last segment touching a connected port grows an
-  L-bend off the port instead of dragging the port itself
-  (`reshapeAnchoredSegment`).
-- **Live-port anchoring** — each move re-reads the live port positions so port
-  drift never freezes into the route, then realigns the end-segment neighbour
-  and orthogonalizes any diagonal left behind.
-- **Merge only on drop** — mid-drag never simplifies; the committed route is
-  exactly what was on screen. On pointer-up, `collapseCollinearBends` then
-  `dropSameAxisBends` fold redundant bends once.
+Os testes Node e o build devem ser executados pelo fluxo serializado de
+verificação do projeto; este documento não pressupõe que tenham sido rodados
+em cada edição isolada de worktree.
 
-### Node moves
+## Limites conhecidos para portar ao núcleo do ngDiagram
 
-Manual edges don't auto-reroute, so `applyEdgeStretchOnSelectionMoved` re-anchors
-each incident manual edge to the moved node's live ports, sliding interior bends
-or inserting an L-bend to stay orthogonal. It runs in two phases, mirroring the
-reshape/relink merge timing:
+O diretório `logic/` importa somente tipos do `ng-diagram` e é a unidade
+planejada para migração. Três pontos ainda dependem do contexto da aplicação:
 
-- `selectionMoved` (live drag) → `merge: false`: re-anchor only, never simplify.
-- `nodeDragEnded` (drop) → `merge: true`: fold the now-collinear bends once.
-
-`EdgeReshapeHandler` drives the gesture through `PointerDragController` (pointer
-capture + move/up plumbing) and dispatches the commands. The overlay's L-bend
-mask keeps the grabbed handle's `@for` track key stable when a bend is injected
-mid-drag.
-
-## Relinking
-
-Selecting a wire shows a ring grip at each endpoint (`appRelinkHandle` directive
-for pointer capture). Dragging a grip moves that endpoint; the path is rebuilt
-from the original points each move (bends never accumulate) and re-orthogonalized.
-
-- Hovering within `PORT_SNAP_PX` of a port previews a connection and highlights
-  the target via `RelinkTargetHighlightService` (the device node reads it and
-  applies `is-link-target`) — the handle's pointer capture suppresses the native
-  `:hover` link-draw uses, so the highlight is driven explicitly.
-- Dropping on a port reconnects; dropping in empty space leaves the end dangling
-  (`source`/`target: ''` with a stored `*Position`).
-- **Merge only on drop** — mid-drag is orthogonalize-only; the collinear fold
-  runs on connect / final dangling commit.
-
-Relinking is intentionally independent of reshaping.
-
-## Dangling-edge creation
-
-ngDiagram discards a port-to-empty draw. `DanglingEdgeService` (on
-`edgeDrawEnded` with no target) turns that into a one-ended manual edge.
-`TempEdgePointsService` captures the live preview's rendered points each frame so
-the created edge keeps the exact bends the user saw; otherwise a simple
-orthogonal stub is built. The dangling end is grid-snapped. AV-specific: it mints
-a `WireEdge` with a `wireId`.
-
-## Grid
-
-Reshaping, relinking and linking all resolve their grid through the same
-`resolveEdgeGrid`, which mirrors ngDiagram's node-drag snap config: an edge
-snaps exactly when its reference node would snap on drag, and not at all when
-snapping is off (`null`). The step itself comes from
-`AV_SCHEMATIC_CONFIG.snapping.gridSize` (default 20) via that config. Device node
-port rows are sized to a multiple of the grid step so port centres land on grid
-lines.
-
-## Tests
-
-`logic/*.spec.ts` cover the pure layer (segment reshaping, simplify
-passes, orthogonalize, stretch, snap, axis classification). Run with `npm test`.
-
-## Porting to ngDiagram core — known seams
-
-The pure layer (`logic/`) imports only `ng-diagram` types and is the
-intended unit to lift into core. Three places knowingly depend on app context
-and would change on the way in:
-
-- **Edge snap borrows node-drag snap.** `resolveEdgeGrid` keys off
-  `shouldSnapDragForNode` because ngDiagram has no dedicated edge-snap config.
-  Core should give edge snapping its own switch rather than piggybacking on the
-  node one (also flagged in `edge-grid.ts`).
-- **`portFlowPosition` assumes left/right ports.** It reads
-  `measuredPorts[].side` directly (refreshed on port recreation since
-  ngDiagram 1.3) but only anchors to the left or right port edge. The general,
-  side-based version (all four sides) belongs in core.
-- **The command pipeline is emulated.** `commands/` + its dispatcher mirror
-  ngDiagram's command flow, but ngDiagram exposes no public command-registration
-  API, so the dispatcher ultimately calls `NgDiagramModelService` directly. In
-  core these become first-class registered commands (and `middleware/` real
-  middleware), with `directives/handlers/logic/` mapping across largely unchanged.
+- `resolveEdgeGrid` reaproveita `shouldSnapDragForNode`, pois ainda não existe
+  uma configuração de snap específica para arestas;
+- `portFlowPosition` lê `measuredPorts[].side`, mas ancora apenas nas laterais
+  esquerda e direita;
+- o dispatcher local emula o pipeline de comandos, pois o ngDiagram ainda não
+  expõe uma API pública para registrar comandos e middlewares.

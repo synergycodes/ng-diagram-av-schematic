@@ -1,6 +1,8 @@
-// Coordinate equality slack in px. Two points within this count as coincident —
-// absorbs sub-pixel float drift from snap math without merging distinct points.
-export const POSITION_TOLERANCE_PX = 1;
+import { ROUTE_POSITION_TOLERANCE_PX } from '../../model/persisted-wire-route.mjs';
+
+// Coordinate equality slack in px. Shared with persisted-route validation so
+// a route produced by the editor cannot be rejected by save/open.
+export const POSITION_TOLERANCE_PX = ROUTE_POSITION_TOLERANCE_PX;
 
 // Looser slack for "is this interior point on the line between its neighbours",
 // used when folding nearly-straight runs after a reshape/relink.

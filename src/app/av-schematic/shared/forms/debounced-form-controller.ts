@@ -1,5 +1,5 @@
 import { effect, Injector, signal, untracked, WritableSignal } from '@angular/core';
-import { debounce, form } from '@angular/forms/signals';
+import { debounce, form, type SchemaFn } from '@angular/forms/signals';
 
 export const DEBOUNCE_TIME_MS = 300;
 
@@ -10,6 +10,8 @@ export interface DebouncedFormConfig<TFormData extends object> {
   debouncedFields: readonly (keyof TFormData)[];
   /** Field keys that participate in change diffs (typically the visible fields). */
   trackedFields: readonly (keyof TFormData)[];
+  /** Additional Signal Forms rules applied before the shared debounce rules. */
+  schema?: SchemaFn<TFormData>;
   /** Called whenever a tracked field changes after debounce. */
   onChange: (entityId: string, fields: (keyof TFormData)[], formData: TFormData) => void;
   /** Injector to anchor the internal `effect()`. Pass `inject(Injector)`. */
@@ -33,6 +35,7 @@ export class DebouncedFormController<TFormData extends object> {
     this.formModel = signal({ ...config.empty });
     this.lastEmittedModel = { ...config.empty };
     this.fieldTree = form(this.formModel, (path) => {
+      config.schema?.(path);
       for (const fieldKey of config.debouncedFields) {
         // The form path tree types each field individually, so a loop variable
         // typed as `keyof TFormData` doesn't satisfy the indexed-access

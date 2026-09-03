@@ -2,10 +2,10 @@
 <div class="list-scroll">
   @if (devices().length === 0) {
     <div class="empty-state p10">
-      No devices in library yet. Use the button below to create one.
+      Nenhum componente no catálogo. Adicione um componente ou restaure os padrões abaixo.
     </div>
   } @else if (filteredDevices().length === 0) {
-    <div class="empty-state p10">No devices match "{{ searchQuery() }}".</div>
+    <div class="empty-state p10">Nenhum componente corresponde a “{{ searchQuery() }}”.</div>
   } @else if (searchQuery().trim()) {
     <ul class="device-list">
       @for (device of filteredDevices(); track device.libraryId) {
@@ -42,5 +42,15 @@
   }
 </div>
 <div class="list-actions">
-  <button class="add-button p10" type="button" (click)="onAddDevice()">+ Add device</button>
+  <button class="add-button p10" type="button" (click)="onAddDevice()">
+    + Adicionar componente
+  </button>
+  <button
+    class="restore-button p10"
+    type="button"
+    title="Repõe os componentes padrão atuais e mantém os personalizados"
+    (click)="onRestoreDefaults()"
+  >
+    Restaurar padrões
+  </button>
 </div>

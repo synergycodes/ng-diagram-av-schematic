@@ -1,0 +1,105 @@
+:host {
+  display: contents;
+}
+
+.wireviz-tools {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--ngd-token-spacing-spacing-8);
+}
+
+.action-btn,
+.report-btn {
+  border: 1px solid var(--ngd-ui-stroke-primary-default);
+  border-radius: var(--ngd-token-radius-button-m);
+  background: var(--ngd-ui-bg-primary-default);
+  color: var(--ngd-txt-primary-default);
+  padding: 5px 9px;
+  font: inherit;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.action-btn:hover:not(:disabled):not(.is-disabled),
+.report-btn:hover {
+  background: var(--ngd-nav-button-bg-primary-hover);
+}
+
+.action-btn:disabled,
+.action-btn.is-disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+}
+
+.report-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: min(520px, calc(100vw - 32px));
+  max-height: min(520px, calc(100vh - 120px));
+  overflow: auto;
+  z-index: 20;
+  padding: 12px;
+  border: 1px solid var(--ngd-ui-stroke-primary-default);
+  border-radius: var(--ngd-token-radius-element-8);
+  background: var(--ngd-ui-bg-primary-default);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.22);
+  color: var(--ngd-txt-primary-default);
+}
+
+.report-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--ngd-ui-separator-primary-default);
+  font-size: 12px;
+
+  .is-error {
+    color: var(--ngd-txt-danger-default, #d92d20);
+  }
+}
+
+.empty-report {
+  margin: 12px 0 0;
+  font-size: 12px;
+}
+
+.report-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 12px 0 0;
+  padding-left: 20px;
+  font-size: 12px;
+
+  li {
+    padding-left: 4px;
+  }
+
+  li.is-warning {
+    color: var(--ngd-txt-warning-default, #9a6700);
+  }
+
+  li.is-error {
+    color: var(--ngd-txt-danger-default, #d92d20);
+  }
+
+  code {
+    margin-right: 6px;
+  }
+
+  p {
+    margin: 3px 0 0;
+  }
+}

@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { DEVICE_CATEGORIES } from '../../../diagram/model/device-categories';
+import { DEVICE_CATEGORIES, deviceCategoryLabel } from '../../../diagram/model/device-categories';
 import { TooltipDirective } from '../../../shared/directives/tooltip/tooltip.directive';
 import { LibraryService } from '../../library.service';
 import { type LibraryDevice } from '../../seed-library';
@@ -7,7 +7,7 @@ import { LibraryListItemComponent } from '../library-list-item/library-list-item
 import { LibrarySearchComponent } from '../library-search/library-search.component';
 
 const UNCATEGORIZED_KEY = '__uncategorized__';
-const UNCATEGORIZED_LABEL = 'Other';
+const UNCATEGORIZED_LABEL = 'Outros';
 
 interface DeviceGroup {
   key: string;
@@ -50,11 +50,15 @@ export class LibraryListComponent {
   }
 
   protected groupTooltip(group: DeviceGroup): string {
-    return this.isGroupOpen(group.key) ? `Collapse ${group.label}` : `Expand ${group.label}`;
+    return this.isGroupOpen(group.key) ? `Recolher ${group.label}` : `Expandir ${group.label}`;
   }
 
   protected onAddDevice(): void {
     this.libraryService.beginCreate();
+  }
+
+  protected onRestoreDefaults(): void {
+    this.libraryService.restoreDefaults();
   }
 }
 
@@ -72,13 +76,13 @@ const groupDevicesByCategory = (devices: readonly LibraryDevice[]): DeviceGroup[
   for (const category of DEVICE_CATEGORIES) {
     const list = buckets.get(category);
     if (list && list.length > 0) {
-      ordered.push({ key: category, label: humanizeCategory(category), devices: list });
+      ordered.push({ key: category, label: deviceCategoryLabel(category), devices: list });
       buckets.delete(category);
     }
   }
   for (const [key, list] of buckets) {
     if (key === UNCATEGORIZED_KEY) continue;
-    ordered.push({ key, label: humanizeCategory(key), devices: list });
+    ordered.push({ key, label: deviceCategoryLabel(key), devices: list });
   }
   const uncategorized = buckets.get(UNCATEGORIZED_KEY);
   if (uncategorized && uncategorized.length > 0) {
@@ -86,6 +90,3 @@ const groupDevicesByCategory = (devices: readonly LibraryDevice[]): DeviceGroup[
   }
   return ordered;
 };
-
-const humanizeCategory = (category: string): string =>
-  category.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());

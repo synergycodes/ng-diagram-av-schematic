@@ -1,24 +1,38 @@
 <div class="form-section">
-  <span class="h10 section-title">Wire</span>
+  <span class="h10 section-title">Fio</span>
 
   <div class="section-content">
-    <app-form-field label="Wire ID" fieldId="wireId">
+    <app-form-field label="ID do fio" fieldId="wireId">
       <input
         id="wireId"
         type="text"
         class="form-input p10"
         [formField]="fieldTree.wireId"
-        placeholder="Enter wire ID"
+        placeholder="Informe o ID do fio"
       />
     </app-form-field>
 
-    <app-form-field label="Wire type" fieldId="wireType">
+    <app-form-field label="Tipo de fio" fieldId="wireType">
       <select id="wireType" class="form-input p10" [formField]="fieldTree.wireType">
         <option value="">—</option>
-        @for (type of wireTypes; track type) {
-          <option [value]="type">{{ type }}</option>
+        @if (unlistedWireType(); as importedType) {
+          <option [value]="importedType">{{ importedType }} · importado</option>
+        }
+        @for (option of wireTypeOptions; track option.value) {
+          <option [value]="option.value">{{ option.label }}</option>
         }
       </select>
+    </app-form-field>
+
+    <app-form-field label="Net" fieldId="netId">
+      <input
+        id="netId"
+        type="text"
+        class="form-input p10"
+        [value]="netLabel()"
+        disabled
+        placeholder="Derivada da conectividade"
+      />
     </app-form-field>
   </div>
 </div>
@@ -26,10 +40,104 @@
 <div class="form-separator"></div>
 
 <div class="form-section">
-  <span class="h10 section-title">Connection</span>
+  <span class="h10 section-title">Cor</span>
+
+  <div class="section-content">
+    <app-form-field label="Cor do fio" fieldId="colorChoice">
+      <div class="color-row">
+        <span class="color-swatch" [style.background]="previewColor()" aria-hidden="true"></span>
+        <select id="colorChoice" class="form-input p10" [formField]="fieldTree.colorChoice">
+          <option value="">— (padrão)</option>
+          @if (unlistedColorCode(); as importedColorCode) {
+            <option [value]="importedColorCode">{{ importedColorCode }} · importada</option>
+          }
+          @for (option of colorOptions; track option.code) {
+            <option [value]="option.code">{{ option.code }} · {{ option.label }}</option>
+          }
+          <option [value]="customChoice">Personalizada…</option>
+        </select>
+      </div>
+    </app-form-field>
+
+    @if (isCustomColor()) {
+      <app-form-field label="Cor personalizada" fieldId="customColor">
+        <input
+          id="customColor"
+          type="text"
+          class="form-input p10"
+          [formField]="fieldTree.customColor"
+          placeholder="#rrggbb ou qualquer cor CSS"
+        />
+      </app-form-field>
+    }
+
+    @if (customColorWarning(); as warning) {
+      <p class="p11 color-warning" role="status">{{ warning }}</p>
+    }
+  </div>
+</div>
+
+<div class="form-separator"></div>
+
+<div class="form-section">
+  <span class="h10 section-title">Detalhes</span>
+
+  <div class="section-content">
+    <app-form-field label="Bitola" fieldId="gauge">
+      <input
+        id="gauge"
+        type="text"
+        class="form-input p10"
+        [formField]="fieldTree.gauge"
+        placeholder="Ex.: 0,5 mm² ou 22 AWG"
+      />
+    </app-form-field>
+
+    <app-form-field label="Comprimento" fieldId="length">
+      @if (jumperLength(); as calculatedLength) {
+        <input
+          id="length"
+          type="text"
+          class="form-input p10"
+          [value]="calculatedLength"
+          disabled
+          aria-describedby="jumper-length-help"
+        />
+        <small id="jumper-length-help">Calculado pela rota local da protoboard.</small>
+      } @else {
+        <input
+          id="length"
+          type="text"
+          class="form-input p10"
+          [formField]="fieldTree.length"
+          placeholder="Ex.: 120 mm"
+        />
+      }
+    </app-form-field>
+
+    <app-form-field label="Observação" fieldId="note">
+      <textarea
+        id="note"
+        class="form-input p10"
+        rows="3"
+        [formField]="fieldTree.note"
+        placeholder="Observação exibida sob demanda"
+      ></textarea>
+    </app-form-field>
+  </div>
+</div>
+
+<div class="form-separator"></div>
+
+<div class="form-section">
+  <span class="h10 section-title">Ligação</span>
+
+  @if (edgeData().wirevizLoop) {
+    <p class="p10 field-value">Loop interno WireViz entre dois pinos do mesmo conector.</p>
+  }
 
   <div class="endpoint-grid">
-    <span class="p10 field-label">Source</span>
+    <span class="p10 field-label">Origem</span>
     <span class="p10 field-value">
       @if (source(); as src) {
         {{ src.deviceId }} · {{ src.portLabel }}
@@ -37,7 +145,7 @@
         —
       }
     </span>
-    <span class="p10 field-label">Target</span>
+    <span class="p10 field-label">Destino</span>
     <span class="p10 field-value">
       @if (target(); as tgt) {
         {{ tgt.deviceId }} · {{ tgt.portLabel }}
@@ -45,5 +153,26 @@
         —
       }
     </span>
+  </div>
+
+  <div class="net-actions">
+    <button
+      class="action-button p10"
+      type="button"
+      [disabled]="!netId()"
+      [attr.aria-pressed]="isNetHighlighted()"
+      (click)="onToggleNetHighlight()"
+    >
+      @if (isNetHighlighted()) {
+        Limpar destaque da net
+      } @else {
+        Destacar net ({{ netSize() }})
+      }
+    </button>
+
+    <label class="p10 dim-toggle">
+      <input type="checkbox" [checked]="dimOthers()" (change)="onDimOthersChange($event)" />
+      Atenuar outros fios
+    </label>
   </div>
 </div>

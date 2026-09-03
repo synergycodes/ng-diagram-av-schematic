@@ -1,0 +1,58 @@
+@let busy = isBusy();
+@let currentStatus = status();
+<div class="project-storage">
+  <label class="id-label" for="project-storage-id">ID do projeto</label>
+  <input
+    id="project-storage-id"
+    class="id-input"
+    type="text"
+    autocomplete="off"
+    spellcheck="false"
+    [value]="projectId()"
+    [disabled]="busy"
+    (input)="onProjectIdInput($event)"
+  />
+
+  <button type="button" class="action-btn" [disabled]="busy" (click)="save()">
+    {{ busy && operationIsSave() ? 'Salvando...' : 'Salvar' }}
+  </button>
+  <button type="button" class="action-btn" [disabled]="busy" (click)="open()">
+    {{ busy && !operationIsSave() ? 'Abrindo...' : 'Abrir' }}
+  </button>
+  <button
+    type="button"
+    class="diagnostic-btn"
+    [attr.aria-expanded]="diagnosticsOpen()"
+    (click)="toggleDiagnostics()"
+  >
+    Diagnóstico físico ({{ diagnosticCount() }})
+  </button>
+
+  @if (diagnosticsOpen()) {
+    <section class="diagnostic-panel" aria-label="Diagnóstico físico">
+      <strong>Diagnóstico físico</strong>
+      @if (diagnostics().length === 0) {
+        <p>Nenhum conflito físico encontrado.</p>
+      } @else {
+        <ul>
+          @for (diagnostic of diagnostics(); track $index) {
+            <li [class.is-error]="diagnostic.severity === 'error'">
+              <span>{{ diagnostic.message }}</span>
+              <code>{{ diagnostic.path }}</code>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+  }
+
+  @if (message(); as text) {
+    <span
+      class="status-message"
+      [class.is-error]="currentStatus === 'error'"
+      [attr.role]="statusRole()"
+    >
+      {{ text }}
+    </span>
+  }
+</div>

@@ -9,24 +9,120 @@ import {
 import {
   type DevicePort,
   type DeviceNodeData,
+  type JunctionNodeData,
   type WireEdgeData,
 } from '../diagram/model/interfaces';
+import { isBoardNode, isWireEdge } from '../diagram/model/guards';
+import { junctionTapIndex, junctionTapPortId } from '../diagram/model/canonical-project';
+import { canonicalColorValue } from '../diagram/model/wire-colors';
+import { ProjectStorageService } from '../project-storage/project-storage.service';
 import { formDataToDeviceData, type DeviceFieldChange } from '../device-form/device-form.mappers';
 import { formDataToWireData, type WireFieldChange } from './components/wire-form/wire-form.mappers';
 import { applyEdgeStretchOnSelectionMoved } from '../diagram/edge-reshaping/middleware/edge-stretch-on-move';
+import {
+  formDataToJunctionData,
+  type JunctionFieldChange,
+} from './components/junction-form/junction-form.mappers';
+import {
+  applyVisualZOrder,
+  isValidVisualPlane,
+  type VisualElementKind,
+} from '../diagram/model/visual-planes';
+import {
+  boardJumperForConnection,
+  boardWorldPoints,
+  defaultBoardJumperLocalRoute,
+} from '../diagram/model/board-jumper';
+import { beginModelHistoryGroup } from '../diagram/model/model-history-group';
 
 /** Mutates diagram nodes and edges in response to sidebar form changes and removal requests, including port-direction-flip reflow and orphaned-edge cleanup. */
 @Injectable()
 export class ElementMutationService {
   private readonly modelService = inject(NgDiagramModelService);
   private readonly diagramService = inject(NgDiagramService);
+  private readonly storage = inject(ProjectStorageService);
 
   async removeNode(nodeId: string): Promise<void> {
-    await this.modelService.deleteNodes([nodeId]);
+    const node = this.modelService
+      .getModel()
+      .getNodes()
+      .find((candidate) => candidate.id === nodeId);
+    const jumperBoardId = isBoardNode(node) ? node.data.boardId : undefined;
+    const jumperIds = this.modelService
+      .getModel()
+      .getEdges()
+      .filter(
+        (edge) =>
+          isWireEdge(edge) &&
+          jumperBoardId !== undefined &&
+          edge.data.jumperBoardId === jumperBoardId,
+      )
+      .map((edge) => edge.id);
+    const endHistoryGroup = beginModelHistoryGroup(this.modelService);
+    try {
+      if (jumperIds.length === 0) {
+        await this.modelService.deleteNodes([nodeId]);
+        return;
+      }
+      await this.diagramService.transaction(() => {
+        void this.modelService.deleteEdges(jumperIds);
+        void this.modelService.deleteNodes([nodeId]);
+      });
+    } finally {
+      endHistoryGroup();
+    }
   }
 
   async removeEdge(edgeId: string): Promise<void> {
     await this.modelService.deleteEdges([edgeId]);
+  }
+
+  async setVisualPlane(
+    modelKind: 'node' | 'edge',
+    elementKind: VisualElementKind,
+    id: string,
+    visualPlane: number,
+  ): Promise<void> {
+    if (!isValidVisualPlane(visualPlane)) return;
+    const model = this.modelService.getModel();
+    const nodes = model
+      .getNodes()
+      .map((node) =>
+        modelKind === 'node' && node.id === id
+          ? { ...node, data: { ...node.data, visualPlane } }
+          : node,
+      );
+    const edges = model
+      .getEdges()
+      .map((edge) =>
+        modelKind === 'edge' && edge.id === id
+          ? { ...edge, data: { ...edge.data, visualPlane } }
+          : edge,
+      );
+    const target =
+      modelKind === 'node'
+        ? nodes.find((node) => node.id === id)
+        : edges.find((edge) => edge.id === id);
+    const targetType = (target?.data as { type?: unknown } | undefined)?.type;
+    if (!target || targetType !== elementKindToDataType(elementKind)) return;
+    await this.applyVisualOrder(nodes, edges);
+  }
+
+  async normalizeVisualOrder(): Promise<void> {
+    const model = this.modelService.getModel();
+    await this.applyVisualOrder(model.getNodes(), model.getEdges());
+  }
+
+  private async applyVisualOrder(nodes: readonly Node[], edges: readonly Edge[]): Promise<void> {
+    const ordered = applyVisualZOrder(nodes, edges);
+    await this.diagramService.transaction(() => {
+      void this.modelService.updateNodes(
+        ordered.nodes.map((node) => ({ id: node.id, data: node.data, zOrder: node.zOrder })),
+      );
+      void this.modelService.updateEdges(
+        ordered.edges.map((edge) => ({ id: edge.id, data: edge.data, zOrder: edge.zOrder })),
+      );
+    });
   }
 
   handleDeviceFieldChange(change: DeviceFieldChange): void {
@@ -76,7 +172,7 @@ export class ElementMutationService {
         }
         // Any ports change (flip, reorder, removal) shifts sibling port rows, so
         // manual edges on unchanged ports need re-anchoring too.
-        applyEdgeStretchOnSelectionMoved(this.modelService, new Set([change.entityId]), true);
+        await applyEdgeStretchOnSelectionMoved(this.modelService, new Set([change.entityId]), true);
       });
   }
 
@@ -161,19 +257,137 @@ export class ElementMutationService {
       .map((edge) => edge.id);
   }
 
-  handleWireFieldChange(change: WireFieldChange): void {
+  async handleWireFieldChange(change: WireFieldChange): Promise<void> {
     const edge = this.modelService.getEdgeById<WireEdgeData>(change.edgeId);
     if (!edge) return;
     const updatedData = formDataToWireData(change.formData, edge.data);
-    void this.modelService.updateEdgeData(change.edgeId, updatedData);
+    const previousName = edge.data.wireId;
+    const nextName = updatedData.wireId;
+    const colorChanged = change.fields.some(
+      (field) => field === 'colorChoice' || field === 'customColor',
+    );
+    const identityChanged =
+      change.fields.includes('wireId') && previousName !== nextName && !!previousName;
+    const wireEdges = this.modelService.getModel().getEdges().filter(isWireEdge);
+
+    if (!identityChanged && (!colorChanged || !nextName)) {
+      await this.modelService.updateEdgeData(change.edgeId, updatedData);
+      return;
+    }
+
+    if (
+      identityChanged &&
+      nextName &&
+      wireEdges.some(
+        (candidate) => candidate.data.wireId === nextName && candidate.data.wireId !== previousName,
+      )
+    ) {
+      throw new Error(`cannot rename cable "${previousName}" to existing cable "${nextName}"`);
+    }
+
+    await this.diagramService.transaction(() => {
+      if (identityChanged) this.storage.renameCableIdentity(previousName, nextName);
+      const selectedIndex = updatedData.wireIndex ?? 1;
+      const serializedColor = canonicalColorValue({
+        color: updatedData.color,
+        colorCode: updatedData.colorCode,
+      });
+      for (const candidate of wireEdges) {
+        const belongsToCable =
+          candidate.data.wireId === (identityChanged ? previousName : nextName);
+        if (
+          candidate.id !== change.edgeId &&
+          (!belongsToCable || (!identityChanged && !colorChanged))
+        ) {
+          continue;
+        }
+
+        let data =
+          candidate.id === change.edgeId
+            ? updatedData
+            : identityChanged
+              ? { ...candidate.data, wireId: nextName }
+              : candidate.data;
+
+        if (colorChanged && belongsToCable) {
+          const cableColors = [...(data.cableColors ?? [])];
+          while (cableColors.length < selectedIndex) cableColors.push('');
+          cableColors[selectedIndex - 1] = serializedColor ?? '';
+          data = {
+            ...data,
+            cableColors,
+            ...((data.wireIndex ?? 1) === selectedIndex
+              ? { color: updatedData.color, colorCode: updatedData.colorCode }
+              : {}),
+          };
+        }
+        void this.modelService.updateEdgeData(candidate.id, data);
+      }
+    });
+  }
+
+  handleJunctionFieldChange(change: JunctionFieldChange): void {
+    const node = this.modelService.getNodeById<JunctionNodeData>(change.nodeId);
+    if (!node) return;
+    const updatedData = formDataToJunctionData(change.formData, node.data);
+    const tapsChanged = updatedData.taps !== node.data.taps;
+    if (!tapsChanged) {
+      void this.modelService.updateNodeData(change.nodeId, updatedData);
+      return;
+    }
+
+    const edgeUpdates = this.modelService.getConnectedEdges(change.nodeId).map((edge) => {
+      const update: { id: string; sourcePort?: string; targetPort?: string } = { id: edge.id };
+      if (edge.source === change.nodeId) {
+        const index = junctionTapIndex(edge.sourcePort) ?? 0;
+        update.sourcePort = junctionTapPortId(index % updatedData.taps);
+      }
+      if (edge.target === change.nodeId) {
+        const index = junctionTapIndex(edge.targetPort) ?? 0;
+        update.targetPort = junctionTapPortId(index % updatedData.taps);
+      }
+      return update;
+    });
+
+    void this.diagramService
+      .transaction(
+        () => {
+          void this.modelService.updateNodeData(change.nodeId, updatedData);
+          if (edgeUpdates.length > 0) void this.modelService.updateEdges(edgeUpdates);
+        },
+        { waitForMeasurements: true },
+      )
+      .then(() =>
+        applyEdgeStretchOnSelectionMoved(this.modelService, new Set([change.nodeId]), true),
+      );
   }
 
   resetEdgeRouting(edgeId: string): void {
+    const edge = this.modelService.getEdgeById<WireEdgeData>(edgeId);
+    const model = this.modelService.getModel();
+    const jumper = edge ? boardJumperForConnection(model.getNodes(), edge) : null;
+    if (edge?.data.jumperBoardId && jumper?.board.data.boardId === edge.data.jumperBoardId) {
+      void this.modelService.updateEdge(edgeId, {
+        routing: 'polyline',
+        routingMode: 'manual',
+        points: boardWorldPoints(
+          jumper.board,
+          defaultBoardJumperLocalRoute(jumper.board.data, jumper.sourceHole, jumper.targetHole),
+        ),
+      });
+      return;
+    }
     void this.modelService.updateEdge(edgeId, {
       points: undefined,
       routingMode: 'auto',
     });
   }
+}
+
+function elementKindToDataType(kind: VisualElementKind): string {
+  if (kind === 'component') return 'device';
+  if (kind === 'conductor') return 'wire';
+  return kind;
 }
 
 const findDirectionFlippedPortIds = (

@@ -83,9 +83,27 @@
 }
 
 .list-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ngd-primitive-4rule-8);
   padding: var(--ngd-primitive-4rule-16);
   border-top: 1px solid var(--ngd-ui-separator-primary-default);
   margin-top: auto;
+}
+
+.restore-button {
+  width: 100%;
+  border: 1px solid var(--ngd-ui-stroke-primary-default);
+  border-radius: var(--ngd-token-radius-button-m);
+  background: transparent;
+  color: var(--ngd-txt-secondary-default);
+  cursor: pointer;
+  padding: var(--ngd-token-spacing-button-m-v-pad-2);
+
+  &:hover {
+    border-color: var(--av-color-accent);
+    color: var(--ngd-txt-primary-default);
+  }
 }
 
 .add-button {
