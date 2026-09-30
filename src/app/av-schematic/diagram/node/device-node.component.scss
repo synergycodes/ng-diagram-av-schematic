@@ -3,10 +3,12 @@
   position: relative;
   cursor: grab;
 
-  --card-border-color: var(--ngd-ui-stroke-primary-default);
+  // The node stroke token (gray-500 in both themes) rather than the panel UI stroke, so a device
+  // stands off the canvas the way a rack device does (WCAG 1.4.11 on both surfaces).
+  --card-border-color: var(--ngd-node-stroke-primary-default);
   --card-bg: var(--ngd-node-bg-primary-default);
   --card-header-bg: var(--ngd-ui-bg-tertiary-default);
-  --card-shadow: none;
+  --card-outline: none;
 
   &:active {
     cursor: grabbing;
@@ -15,13 +17,15 @@
   &:not(.is-linking):hover,
   &.is-linking:has(.port-shape:hover),
   &.is-link-target {
-    --card-border-color: var(--av-color-selection-border);
+    --card-border-color: var(--av-color-accent);
   }
 
+  // Selected: the rack device treatment, accent border plus a 1px inset outline for a 2px accent
+  // edge, instead of a halo outside the box.
   &.selected,
   &.edge-highlighted {
-    --card-border-color: var(--av-color-selection-border);
-    --card-shadow: 0 0 0 3px var(--av-color-selection-halo);
+    --card-border-color: var(--av-color-accent);
+    --card-outline: 1px solid var(--av-color-accent);
     --card-bg: color-mix(in srgb, var(--av-color-accent) 5%, var(--ngd-node-bg-primary-default));
     --card-header-bg: color-mix(
       in srgb,
@@ -53,10 +57,9 @@
   border-radius: var(--ngd-token-radius-element-12);
   color: var(--ngd-txt-primary-default);
   font-size: 0.75rem;
-  box-shadow: var(--card-shadow);
-  transition:
-    border-color 150ms ease,
-    box-shadow 150ms ease;
+  outline: var(--card-outline);
+  outline-offset: -2px;
+  transition: border-color 150ms ease;
 }
 
 .device-node__header {

@@ -56,6 +56,10 @@ export class LibraryListComponent {
   protected onAddDevice(): void {
     this.libraryService.beginCreate();
   }
+
+  protected onEditDevice(device: LibraryDevice): void {
+    this.libraryService.beginEdit(device.libraryId);
+  }
 }
 
 const groupDevicesByCategory = (devices: readonly LibraryDevice[]): DeviceGroup[] => {

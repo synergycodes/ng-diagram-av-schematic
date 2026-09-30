@@ -29,6 +29,12 @@ export class ElementMutationService {
     await this.modelService.deleteEdges([edgeId]);
   }
 
+  /** Removes a mixed selection; wires go first so none is deleted twice via its device. */
+  async removeElements(nodeIds: readonly string[], edgeIds: readonly string[]): Promise<void> {
+    if (edgeIds.length > 0) await this.modelService.deleteEdges([...edgeIds]);
+    if (nodeIds.length > 0) await this.modelService.deleteNodes([...nodeIds]);
+  }
+
   handleDeviceFieldChange(change: DeviceFieldChange): void {
     const node = this.modelService.getNodeById<DeviceNodeData>(change.entityId);
     if (!node) return;

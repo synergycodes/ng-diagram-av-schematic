@@ -1,0 +1,26 @@
+<dialog
+  #dialog
+  class="confirm-dialog"
+  tabindex="-1"
+  aria-modal="true"
+  aria-labelledby="confirm-dialog-title"
+  aria-describedby="confirm-dialog-message"
+  (close)="onClose()"
+>
+  @if (request(); as request) {
+    <div class="dialog-body">
+      <div class="dialog-header">
+        <h2 id="confirm-dialog-title" class="h7 dialog-title">{{ request.title }}</h2>
+      </div>
+      <p id="confirm-dialog-message" class="p10 dialog-message">{{ request.message }}</p>
+      <div class="dialog-actions">
+        <button class="action-button dialog-cancel p10" type="button" (click)="cancel()">
+          {{ request.cancelLabel }}
+        </button>
+        <button class="remove-button dialog-confirm p10" type="button" (click)="confirm()">
+          {{ request.confirmLabel }}
+        </button>
+      </div>
+    </div>
+  }
+</dialog>

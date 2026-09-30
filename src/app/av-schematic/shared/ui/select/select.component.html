@@ -1,0 +1,59 @@
+<div class="select" [class.size-s]="size() === 's'">
+  <button
+    #triggerEl
+    type="button"
+    class="select-trigger p10"
+    role="combobox"
+    aria-haspopup="listbox"
+    [id]="selectId()"
+    [attr.aria-expanded]="isOpen()"
+    [attr.aria-controls]="listboxId()"
+    [attr.aria-activedescendant]="isOpen() ? activeId() : null"
+    [attr.aria-describedby]="describedBy()"
+    [disabled]="disabled()"
+    (click)="toggle()"
+    (keydown)="onKeydown($event)"
+  >
+    <span class="select-value" [class.placeholder]="selected() === null">
+      {{ selected()?.label ?? placeholder() }}
+    </span>
+    <span class="caret-icon" aria-hidden="true"></span>
+  </button>
+
+  @if (isOpen()) {
+    <div
+      #listboxEl
+      class="select-listbox"
+      role="listbox"
+      [id]="listboxId()"
+      [attr.aria-labelledby]="selectId()"
+      [class.above]="placement()?.side === 'above'"
+      [class.placed]="placement() !== null"
+      [style.top.px]="placement()?.top"
+      [style.left.px]="placement()?.left"
+      [style.width.px]="placement()?.width"
+      [style.max-height.px]="placement()?.maxHeight"
+    >
+      @for (option of options(); track option.value; let i = $index) {
+        <!-- Keyboard nav lives on the trigger (aria-activedescendant); mouse click is a pointer shortcut. -->
+        <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events,@angular-eslint/template/interactive-supports-focus -->
+        <div
+          #optionEl
+          class="select-option p10"
+          role="option"
+          [id]="optionId(i)"
+          [attr.aria-selected]="option.value === value()"
+          [class.selected]="option.value === value()"
+          [class.focused]="focusedIndex() === i"
+          (mousedown)="$event.preventDefault()"
+          (click)="select(option.value)"
+        >
+          <span class="option-label">{{ option.label }}</span>
+          @if (option.value === value()) {
+            <span class="check-icon" aria-hidden="true"></span>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>

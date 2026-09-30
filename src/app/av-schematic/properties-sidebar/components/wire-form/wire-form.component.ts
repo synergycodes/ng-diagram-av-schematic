@@ -11,12 +11,19 @@ import { FormField } from '@angular/forms/signals';
 import { type WireEdgeData } from '../../../diagram/model/interfaces';
 import { type WireEndpointInfo } from '../../properties-sidebar.service';
 import { FormFieldComponent } from '../../../shared/ui/form-field/form-field.component';
-import { wireDataToFormData, WIRE_TYPES } from './wire-form.mappers';
+import { SelectComponent, type SelectOption } from '../../../shared/ui/select/select.component';
+import { wireDataToFormData, WIRE_TYPES, type WireType } from './wire-form.mappers';
 import { WireFormService } from './wire-form.service';
+
+/** The empty row keeps "no type" pickable, as the connection grid shows an unset value. */
+const WIRE_TYPE_OPTIONS: readonly SelectOption<WireType | ''>[] = [
+  { value: '', label: '—' },
+  ...WIRE_TYPES.map((type) => ({ value: type, label: type })),
+];
 
 @Component({
   selector: 'app-wire-form',
-  imports: [FormField, FormFieldComponent],
+  imports: [FormField, FormFieldComponent, SelectComponent],
   templateUrl: './wire-form.component.html',
   styleUrl: './wire-form.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -30,7 +37,7 @@ export class WireFormComponent {
   readonly target = input.required<WireEndpointInfo | null>();
 
   protected readonly fieldTree = this.formService.fieldTree;
-  protected readonly wireTypes = WIRE_TYPES;
+  protected readonly wireTypeOptions = WIRE_TYPE_OPTIONS;
 
   constructor() {
     this.syncFormWithInputs();

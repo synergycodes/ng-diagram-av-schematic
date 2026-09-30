@@ -1,7 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { NgDiagramModelService, type Edge, type Node } from 'ng-diagram';
+import { removalRequest } from '../diagram/selection-removal.service';
 import { DeviceFormComponent } from '../device-form/device-form.component';
 import { ON_DEVICE_FIELD_CHANGE, type DeviceFieldChange } from '../device-form/device-form.mappers';
 import { DeviceFormService } from '../device-form/device-form.service';
+import { ConfirmDialogService } from '../shared/ui/confirm-dialog/confirm-dialog.service';
 import { SidebarHeaderComponent } from './components/sidebar-header/sidebar-header.component';
 import { SidebarPlaceholderComponent } from './components/sidebar-placeholder/sidebar-placeholder.component';
 import { WireFormComponent } from './components/wire-form/wire-form.component';
@@ -51,6 +54,8 @@ import { PropertiesSidebarService } from './properties-sidebar.service';
 export class PropertiesSidebarComponent {
   private readonly sidebarService = inject(PropertiesSidebarService);
   private readonly elementMutationService = inject(ElementMutationService);
+  private readonly modelService = inject(NgDiagramModelService);
+  private readonly confirmDialog = inject(ConfirmDialogService);
 
   protected readonly isExpanded = this.sidebarService.isExpanded;
   protected readonly state = this.sidebarService.sidebarState;
@@ -65,17 +70,18 @@ export class PropertiesSidebarComponent {
     this.sidebarService.toggleSidebarVisibility();
   }
 
-  protected onRemoveNode(): void {
-    const nodeId = this.sidebarService.selectedNode()?.id;
-    if (nodeId) {
-      void this.elementMutationService.removeNode(nodeId);
+  /** Removing a device also drops its wires, so it asks first (design-OS Modal guideline). */
+  protected async onRemoveNode(): Promise<void> {
+    const node = this.sidebarService.selectedNode();
+    if (node && (await this.confirmRemoval([node], []))) {
+      await this.elementMutationService.removeNode(node.id);
     }
   }
 
-  protected onRemoveWire(): void {
-    const edgeId = this.sidebarService.selectedEdge()?.id;
-    if (edgeId) {
-      void this.elementMutationService.removeEdge(edgeId);
+  protected async onRemoveWire(): Promise<void> {
+    const edge = this.sidebarService.selectedEdge();
+    if (edge && (await this.confirmRemoval([], [edge]))) {
+      await this.elementMutationService.removeEdge(edge.id);
     }
   }
 
@@ -84,5 +90,15 @@ export class PropertiesSidebarComponent {
     if (edgeId) {
       this.elementMutationService.resetEdgeRouting(edgeId);
     }
+  }
+
+  /** Same wording as the Delete key, from `removalRequest`, so both paths promise the same thing. */
+  private confirmRemoval(nodes: Node[], edges: Edge[]): Promise<boolean> {
+    const request = removalRequest(
+      nodes,
+      edges,
+      (id) => this.modelService.getConnectedEdges(id).length,
+    );
+    return request ? this.confirmDialog.confirm(request) : Promise.resolve(false);
   }
 }

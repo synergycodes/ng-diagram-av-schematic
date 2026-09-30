@@ -1,0 +1,152 @@
+@use 'sass:list';
+
+// Button system (design-OS Button guideline). Four variants, one hover rule: the fill steps one
+// shade on hover and again on press; text and border keep their colour, so a button never changes
+// intent (neutral -> accent, neutral -> critical) under the pointer.
+//
+//   .primary-button  Primary        the one main action of a panel (Save, Add to library)
+//   .action-button   Secondary      neutral, lower-emphasis action (Cancel, Move to Unplaced)
+//   .remove-button   Ghost-Critical every destructive action, including the modal's confirm
+//   .ghost-button    Ghost-Primary  tertiary accent action, no border (+ Add device)
+//
+//   .button-s        size S for inline, dense placements (list footers); default is size M
+//
+// Pass the variants a component uses so its stylesheet stays within the size budget.
+@mixin sidebar-actions(
+  $variants: (
+    remove,
+    primary,
+    action,
+    ghost,
+  )
+) {
+  .sidebar-actions {
+    padding: var(--ngd-primitive-4rule-16);
+    display: flex;
+    flex-direction: column;
+    gap: var(--ngd-primitive-4rule-8);
+  }
+
+  .remove-button,
+  .action-button,
+  .primary-button,
+  .ghost-button {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--ngd-token-radius-button-m);
+    cursor: pointer;
+    padding: var(--ngd-token-spacing-button-m-v-pad-2);
+    transition: background 150ms ease;
+
+    &:disabled {
+      cursor: not-allowed;
+    }
+
+    &.button-s {
+      width: auto;
+      border-radius: var(--ngd-token-radius-button-s);
+      padding: var(--ngd-token-spacing-button-s-v-pad-2) var(--ngd-token-spacing-button-s-h-pad-2);
+    }
+  }
+
+  @if list.index($variants, remove) {
+    // Ghost-critical: one look for every destructive action, in the sidebars and in the
+    // confirmation modal alike.
+    .remove-button {
+      background: var(--ngd-button-ghost-destructive-bg-default);
+      color: var(--av-critical-txt);
+      border: 1px solid var(--av-critical-stroke);
+
+      &:hover:not(:disabled) {
+        background: var(--ngd-button-ghost-destructive-bg-hover);
+      }
+
+      // The 30% active tint drops light text to 4.2:1, so pressed reuses the hover tint.
+      &:active:not(:disabled) {
+        background: var(--ngd-button-ghost-destructive-bg-hover);
+      }
+
+      &:disabled {
+        background: transparent;
+        color: var(--av-disabled-txt);
+        border-color: var(--av-disabled-stroke);
+      }
+    }
+  }
+
+  @if list.index($variants, primary) {
+    // Primary: the accent ramp steps darker on hover and press (white text 4.8 / 5.7 / 6.8:1).
+    // A brightness filter went the other way and dropped white text to 4.4:1.
+    .primary-button {
+      border: none;
+      background: var(--ngd-button-primary-bg-default);
+      color: var(--ngd-txt-primary-white);
+
+      &:hover:not(:disabled) {
+        background: var(--ngd-button-primary-bg-hover);
+      }
+
+      &:active:not(:disabled) {
+        background: var(--ngd-button-primary-bg-active);
+      }
+
+      &:disabled {
+        background: var(--av-disabled-bg);
+        color: var(--av-disabled-txt);
+      }
+    }
+  }
+
+  @if list.index($variants, action) {
+    // Secondary: neutral in every state. The accent is reserved for Primary, so Cancel never
+    // reads as the recommended choice next to a critical confirm.
+    .action-button {
+      background: transparent;
+      color: var(--ngd-txt-primary-default);
+      border: 1px solid var(--ngd-ui-stroke-primary-default);
+
+      &:hover:not(:disabled) {
+        background: var(--av-list-item-bg);
+      }
+
+      &:active:not(:disabled) {
+        background: var(--ngd-ui-bg-secondary-default);
+      }
+
+      &:disabled {
+        color: var(--av-disabled-txt);
+        border-color: var(--av-disabled-stroke);
+      }
+    }
+  }
+
+  @if list.index($variants, ghost) {
+    // Ghost-primary: transparent tertiary action. Accent text plus a glyph in the label ("+") is
+    // the affordance; no dashed border, which the design system reserves for drop zones.
+    .ghost-button {
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--av-accent-txt);
+
+      &:hover:not(:disabled) {
+        background: var(--ngd-colors-acc1-500-10);
+      }
+
+      &:active:not(:disabled) {
+        background: var(--ngd-colors-acc1-500-20);
+      }
+
+      &:disabled {
+        color: var(--av-disabled-txt);
+      }
+    }
+  }
+
+  .action-hint {
+    margin: 0;
+    font-size: 11px;
+    color: var(--ngd-txt-secondary-default);
+  }
+}

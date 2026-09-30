@@ -9,6 +9,7 @@ import { DanglingEdgeService } from '../diagram/dangling-edge-creation/dangling-
 import { TempEdgePointsService } from '../diagram/dangling-edge-creation/temp-edge-points.service';
 import { NodeVisibilityConfigService } from '../diagram/node-visibility/node-visibility-config.service';
 import { PortFocusService } from '../diagram/port-focus.service';
+import { SelectionRemovalService } from '../diagram/selection-removal.service';
 import { ViewportAnimationService } from '../diagram/viewport-animation.service';
 import { ViewportBoundsDirective } from '../diagram/node-visibility/viewport-bounds.directive';
 import { ViewportOverlayDirective } from '../diagram/node-visibility/viewport-overlay.directive';
@@ -19,6 +20,8 @@ import { DiagramExportService } from '../export/diagram-export.service';
 import { ElementMutationService } from '../properties-sidebar/element-mutation.service';
 import { PropertiesSidebarComponent } from '../properties-sidebar/properties-sidebar.component';
 import { PropertiesSidebarService } from '../properties-sidebar/properties-sidebar.service';
+import { ConfirmDialogComponent } from '../shared/ui/confirm-dialog/confirm-dialog.component';
+import { ConfirmDialogService } from '../shared/ui/confirm-dialog/confirm-dialog.service';
 import { TopNavbarComponent } from '../top-navbar/top-navbar.component';
 
 @Component({
@@ -29,6 +32,7 @@ import { TopNavbarComponent } from '../top-navbar/top-navbar.component';
     PropertiesSidebarComponent,
     TopNavbarComponent,
     MinimapPanelComponent,
+    ConfirmDialogComponent,
     ViewportBoundsDirective,
     ViewportOverlayDirective,
   ],
@@ -39,6 +43,8 @@ import { TopNavbarComponent } from '../top-navbar/top-navbar.component';
     provideNgDiagram(),
     PropertiesSidebarService,
     ElementMutationService,
+    SelectionRemovalService,
+    ConfirmDialogService,
     NodeVisibilityConfigService,
     ViewportAnimationService,
     PortFocusService,

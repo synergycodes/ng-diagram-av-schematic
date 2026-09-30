@@ -54,33 +54,29 @@
         (input)="updateLabel(port.id, $any($event.target).value)"
       />
       <div class="connector-wrap">
-        <select
-          class="port-input port-connector p10"
-          (change)="updateConnectorType(port.id, $any($event.target).value)"
-        >
-          <option value="" [selected]="!port.connectorType">—</option>
-          @for (connector of connectorTypes; track connector) {
-            <option [value]="connector" [selected]="connector === port.connectorType">
-              {{ connector }}
-            </option>
-          }
-        </select>
-        <span class="connector-caret" aria-hidden="true"></span>
+        <label class="visually-hidden" [for]="connectorSelectId(port)">Connector</label>
+        <app-select
+          size="s"
+          [selectId]="connectorSelectId(port)"
+          [options]="connectorOptions"
+          [value]="port.connectorType ?? ''"
+          (valueChange)="updateConnectorType(port.id, $event)"
+        />
       </div>
 
       <div class="row-actions">
         <button
           type="button"
-          class="icon-action"
-          aria-label="Switch direction"
-          appTooltip="Switch between input and output"
+          class="icon-button"
+          [attr.aria-label]="port.direction === 'input' ? 'Move to outputs' : 'Move to inputs'"
+          [appTooltip]="port.direction === 'input' ? 'Move to outputs' : 'Move to inputs'"
           (click)="toggleDirection(port.id)"
         >
           <span class="icon icon-swap" aria-hidden="true"></span>
         </button>
         <button
           type="button"
-          class="icon-action danger"
+          class="icon-button"
           aria-label="Remove port"
           appTooltip="Remove port"
           (click)="removePort(port.id)"
@@ -92,7 +88,11 @@
   }
 </div>
 
-<button #addPortButton type="button" class="add-port-button p10" (click)="addPort()">
-  <span class="icon icon-plus-circle" aria-hidden="true"></span>
-  Add new port
+<button
+  #addPortButton
+  type="button"
+  class="ghost-button button-s add-port-button p10"
+  (click)="addPort()"
+>
+  + Add new port
 </button>

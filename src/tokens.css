@@ -302,7 +302,7 @@ html[data-theme='light'] {
   --ngd-focus-ring-node-warning: var(--ngd-colors-acc5-500-40);
   --ngd-input-bg-primary-error: var(--ngd-colors-red-400-10);
   --ngd-input-bg-primary-success: var(--ngd-colors-green-400-10);
-  --ngd-input-stroke-primary-default: var(--ngd-colors-gray-400);
+  --ngd-input-stroke-primary-default: var(--ngd-colors-gray-500);
   --ngd-input-stroke-primary-error: var(--ngd-colors-red-400);
   --ngd-input-stroke-primary-focus: var(--ngd-colors-acc4-500);
   --ngd-input-stroke-primary-success: var(--ngd-colors-green-400);
@@ -332,7 +332,7 @@ html[data-theme='light'] {
   --ngd-node-port-fill-default: var(--ngd-colors-gray-100);
   --ngd-node-port-stroke-active: var(--ngd-colors-gray-100);
   --ngd-node-port-stroke-default: var(--ngd-colors-gray-500);
-  --ngd-node-stroke-primary-default: var(--ngd-colors-gray-400);
+  --ngd-node-stroke-primary-default: var(--ngd-colors-gray-500);
   --ngd-node-stroke-primary-hover: var(--ngd-colors-acc1-500);
   --ngd-node-txt-disabled: var(--ngd-colors-gray-900-30);
   --ngd-pt-bg-primary-default: var(--ngd-colors-gray-700);
@@ -364,7 +364,7 @@ html[data-theme='light'] {
   --ngd-txt-secondary-default: var(--ngd-colors-gray-600);
   --ngd-txt-secondary-inverse: var(--ngd-colors-gray-300);
   --ngd-txt-success-default: var(--ngd-colors-green-400);
-  --ngd-txt-tertiary-default: var(--ngd-colors-gray-500);
+  --ngd-txt-tertiary-default: var(--ngd-colors-gray-600);
   --ngd-txt-tooltip-blue: var(--ngd-colors-gray-100);
   --ngd-txt-tooltip-bw: var(--ngd-colors-gray-100);
   --ngd-txt-warning-default: var(--ngd-colors-orange-400);
@@ -479,7 +479,7 @@ html[data-theme='dark'] {
   --ngd-focus-ring-node-warning: var(--ngd-colors-acc5-500-40);
   --ngd-input-bg-primary-error: var(--ngd-colors-red-400-10);
   --ngd-input-bg-primary-success: var(--ngd-colors-green-400-10);
-  --ngd-input-stroke-primary-default: var(--ngd-colors-gray-600);
+  --ngd-input-stroke-primary-default: var(--ngd-colors-gray-500);
   --ngd-input-stroke-primary-error: var(--ngd-colors-red-400);
   --ngd-input-stroke-primary-focus: var(--ngd-colors-acc4-500);
   --ngd-input-stroke-primary-success: var(--ngd-colors-green-400);
@@ -509,7 +509,7 @@ html[data-theme='dark'] {
   --ngd-node-port-fill-default: var(--ngd-colors-gray-100);
   --ngd-node-port-stroke-active: var(--ngd-colors-gray-100);
   --ngd-node-port-stroke-default: var(--ngd-colors-gray-500);
-  --ngd-node-stroke-primary-default: var(--ngd-colors-gray-600);
+  --ngd-node-stroke-primary-default: var(--ngd-colors-gray-500);
   --ngd-node-stroke-primary-hover: var(--ngd-colors-acc1-400);
   --ngd-node-txt-disabled: var(--ngd-colors-gray-100-30);
   --ngd-pt-bg-primary-default: var(--ngd-colors-gray-200);
@@ -541,7 +541,7 @@ html[data-theme='dark'] {
   --ngd-txt-secondary-default: var(--ngd-colors-gray-400);
   --ngd-txt-secondary-inverse: var(--ngd-colors-gray-700);
   --ngd-txt-success-default: var(--ngd-colors-green-200);
-  --ngd-txt-tertiary-default: var(--ngd-colors-gray-500);
+  --ngd-txt-tertiary-default: var(--ngd-colors-gray-450);
   --ngd-txt-tooltip-blue: var(--ngd-colors-gray-100);
   --ngd-txt-tooltip-bw: var(--ngd-colors-gray-800);
   --ngd-txt-warning-default: var(--ngd-colors-orange-100);
@@ -860,11 +860,28 @@ html[data-theme='dark'] {
   --av-port-height: 13px;
   --av-color-wire-stroke: var(--ngd-edge-primary-default);
   --av-color-accent: var(--ngd-ui-stroke-primary-highlight);
-  --av-color-selection-border: #7938d3;
+  /* Accent as text (not stroke): acc1-500 is only 4.8:1 on white and 3.1:1 on the dark panel,
+     so text and glyphs use a darker (light) / lighter (dark) step that clears 4.5:1. */
+  --av-accent-txt: var(--ngd-colors-acc1-700);
+  /* Disabled controls: designed tokens instead of opacity, so a disabled button still reads as
+     present (design-OS accessibility rule). Disabled text is exempt from 1.4.3. */
+  --av-disabled-bg: var(--ngd-colors-gray-300);
+  --av-disabled-txt: var(--ngd-colors-gray-500);
+  --av-disabled-stroke: var(--ngd-colors-gray-400);
+  /* Ghost-critical text and border, used by every destructive button. Light text is red-500
+     (red-400 is 4.3:1 on the tinted fill); dark uses red-300 (red-400 misses 3:1 as a border). */
+  --av-critical-txt: var(--ngd-colors-red-500);
+  --av-critical-stroke: var(--ngd-button-ghost-destructive-stroke-default);
   --av-color-selection-halo: #482674;
   --av-list-item-bg: var(--ngd-ui-bg-tertiary-default);
 }
 
 html[data-theme='dark'] {
   --av-list-item-bg: var(--ngd-colors-gray-750);
+  --av-accent-txt: var(--ngd-colors-acc1-300);
+  --av-disabled-bg: var(--ngd-colors-gray-650);
+  --av-disabled-txt: var(--ngd-colors-gray-500);
+  --av-disabled-stroke: var(--ngd-colors-gray-600);
+  --av-critical-txt: var(--ngd-colors-red-300);
+  --av-critical-stroke: var(--ngd-colors-red-300);
 }
