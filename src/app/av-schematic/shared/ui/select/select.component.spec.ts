@@ -78,7 +78,6 @@ describe('SelectComponent', () => {
     expect(options()[0].getAttribute('aria-selected')).toBe('false');
     expect(options()[1].querySelector('.check-icon')).not.toBeNull();
     expect(options()[0].querySelector('.check-icon')).toBeNull();
-    // Keyboard highlight starts on the selected option.
     expect(trigger().getAttribute('aria-activedescendant')).toBe(options()[1].id);
     expect(options()[1].classList.contains('focused')).toBe(true);
   });

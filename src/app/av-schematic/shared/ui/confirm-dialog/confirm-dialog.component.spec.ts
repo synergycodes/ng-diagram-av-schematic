@@ -102,6 +102,30 @@ describe('ConfirmDialogComponent', () => {
     await expect(result).resolves.toBe(false);
   });
 
+  it('a close event from the previous dialog does not cancel the request that replaced it', async () => {
+    const { fixture, service, query } = setup();
+    const first = service.confirm(options);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    query('.dialog-confirm').click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await expect(first).resolves.toBe(true);
+
+    const second = service.confirm({ ...options, title: 'Remove room?' });
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    // The browser fires `close` for our own close() a task later - by now the next dialog is up.
+    query('dialog').dispatchEvent(new Event('close'));
+    fixture.detectChanges();
+
+    expect(service.request()?.title).toBe('Remove room?');
+    query('.dialog-confirm').click();
+    await expect(second).resolves.toBe(true);
+  });
+
   it('a click on the scrim counts as cancel, a click inside does not', async () => {
     const { fixture, service, query } = setup();
     const result = service.confirm(options);

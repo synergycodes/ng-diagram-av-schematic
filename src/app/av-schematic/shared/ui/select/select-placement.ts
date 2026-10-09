@@ -30,11 +30,8 @@ export const LISTBOX_GAP_PX = 8;
 export const VIEWPORT_MARGIN_PX = 8;
 
 /**
- * Viewport-relative placement for a select's listbox. The list may only occupy the trigger's
- * scroll container (the panel's content area, so it never covers the panel footer or header),
- * further limited by the viewport margin. It opens below the trigger when that space holds it,
- * flips above when the space over the trigger does, and otherwise takes the roomier side and
- * shrinks to fit it.
+ * Viewport-relative placement for a select's listbox, confined to the trigger's scroll container
+ * so the list never covers the panel's footer or header.
  */
 export function computeListboxPlacement(
   trigger: TriggerRect,

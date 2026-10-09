@@ -82,14 +82,12 @@ ng-diagram-palette-item {
   font-weight: 600;
 }
 
-.device-row__chip {
+// Row metadata the way the rack palette row shows device dimensions (`.row-badge`): plain
+// tertiary text, no fill or border, so the model name stays the dominant element.
+.device-row__category {
+  flex: none;
   font-size: 10px;
-  padding: 2px 6px;
-  border-radius: 8px;
-  background: var(--ngd-ui-bg-primary-default);
-  border: 1px solid var(--ngd-ui-stroke-primary-default);
-  color: var(--ngd-txt-secondary-default);
-  flex-shrink: 0;
+  color: var(--ngd-txt-tertiary-default);
   text-transform: capitalize;
 }
 

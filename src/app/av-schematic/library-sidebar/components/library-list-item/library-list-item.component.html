@@ -22,8 +22,8 @@
           }
         </span>
       </div>
-      @if (categoryLabel()) {
-        <span class="device-row__chip">{{ categoryLabel() }}</span>
+      @if (showCategory() && categoryLabel()) {
+        <span class="device-row__category">{{ categoryLabel() }}</span>
       }
     </div>
 

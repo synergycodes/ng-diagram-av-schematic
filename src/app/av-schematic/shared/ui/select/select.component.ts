@@ -22,18 +22,6 @@ export interface SelectOption<T extends string> {
   label: string;
 }
 
-/**
- * Select-only dropdown for picking one value from a fixed set (design-OS: "Text field with
- * dropdown" + List Box - Dropdown). The trigger is a real button with the combobox role, so a
- * `<label for>` names it and it takes part in the tab order; the popover is a listbox whose
- * highlighted row is exposed through aria-activedescendant. Works with `[formField]` through the
- * signal-forms value contract.
- *
- * The listbox is fixed to the viewport (measured from the trigger, like the tooltip) so a
- * scrolling panel cannot clip it. It stays within the panel's content area: it flips above the
- * trigger when the space below, before the panel footer, cannot hold it. Scrolling or resizing
- * closes it rather than leaving a detached list behind.
- */
 @Component({
   selector: 'app-select',
   templateUrl: './select.component.html',
@@ -49,10 +37,6 @@ export class SelectComponent<T extends string> implements FormValueControl<T> {
   readonly selectId = input.required<string>();
   readonly placeholder = input('Select…');
   readonly disabled = input(false);
-  /**
-   * Text-field size (design-OS Text field and List Box both define S and M). S is for dense rows
-   * such as the ports editor; M is the default for form fields.
-   */
   readonly size = input<SelectSize>('m');
   /** Space-separated ids of the field's helper / error text, applied to the trigger. */
   readonly describedBy = input<string | null>(null);
@@ -170,7 +154,6 @@ export class SelectComponent<T extends string> implements FormValueControl<T> {
     return null;
   }
 
-  /** Outside clicks close the list; so do scroll and resize, which would move the trigger away. */
   private listenWhileOpen(): () => void {
     const onClick = (event: MouseEvent) => {
       if (!this.elRef.nativeElement.contains(event.target as Node | null)) this.close();

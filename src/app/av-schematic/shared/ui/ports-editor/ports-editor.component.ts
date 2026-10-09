@@ -114,10 +114,7 @@ export class PortsEditorComponent implements FormValueControl<DevicePort[]> {
     return list[list.length - 1]?.id === port.id;
   }
 
-  /**
-   * Moves a port up or down within its direction list while preserving the
-   * positions of ports in the other direction.
-   */
+  /** Reorders within one direction list, leaving the other direction's positions untouched. */
   private movePortInDirection(id: string, delta: -1 | 1): void {
     this.value.update((ports) => {
       const target = ports.find((p) => p.id === id);

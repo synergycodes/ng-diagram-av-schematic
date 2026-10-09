@@ -8,19 +8,11 @@ import {
 } from '@angular/core';
 import { ConfirmDialogService } from './confirm-dialog.service';
 
-/**
- * Renders the pending `ConfirmDialogService` request as a native `<dialog>` opened with
- * `showModal()`, which gives the focus trap, the inert background, Esc-to-dismiss and focus
- * return to the trigger for free. Initial focus goes to the dialog itself, not to a button, so a
- * reflexive Enter after Delete or Backspace neither confirms nor cancels; the user tabs to Cancel
- * first, then to the destructive action. Mount it once on the page.
- */
 @Component({
   selector: 'app-confirm-dialog',
   templateUrl: './confirm-dialog.component.html',
   styleUrl: './confirm-dialog.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  // A click on the backdrop targets the <dialog> element itself and bubbles up to the host.
   host: { '(click)': 'onBackdropClick($event)' },
 })
 export class ConfirmDialogComponent {
@@ -28,6 +20,12 @@ export class ConfirmDialogComponent {
   private readonly dialog = viewChild.required<ElementRef<HTMLDialogElement>>('dialog');
 
   protected readonly request = this.service.request;
+
+  /**
+   * How many of our own `close()` calls are still waiting for their `close` event: the browser
+   * fires it a task later, by which time the request that opened next may already be on screen.
+   */
+  private selfIssuedCloses = 0;
 
   constructor() {
     afterRenderEffect(() => {
@@ -40,9 +38,11 @@ export class ConfirmDialogComponent {
         } else {
           el.setAttribute('open', '');
         }
-        // showModal() would otherwise hand focus to the first button.
+        // Focus the box, not a button: showModal() would focus the first one, so a reflexive
+        // Enter after Delete or Backspace would confirm the removal.
         el.focus();
       } else if (!shouldBeOpen && el.open) {
+        this.selfIssuedCloses++;
         if (typeof el.close === 'function') {
           el.close();
         } else {
@@ -60,8 +60,12 @@ export class ConfirmDialogComponent {
     this.service.resolve(false);
   }
 
-  /** Native close (Esc, or our own `close()` after resolving) - a no-op once resolved. */
+  /** Esc dismisses the dialog, which counts as cancel; our own `close` echo must not. */
   protected onClose(): void {
+    if (this.selfIssuedCloses > 0) {
+      this.selfIssuedCloses--;
+      return;
+    }
     this.service.resolve(false);
   }
 

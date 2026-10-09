@@ -1,8 +1,9 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { NgDiagramModelService, type Edge, type Node } from 'ng-diagram';
+import { NgDiagramModelService, NgDiagramSelectionService, type Edge, type Node } from 'ng-diagram';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { type DeviceNodeData, type WireEdgeData } from '../diagram/model/interfaces';
+import { SelectionRemovalService } from '../diagram/selection-removal.service';
 import { ConfirmDialogService } from '../shared/ui/confirm-dialog/confirm-dialog.service';
 import { ElementMutationService } from './element-mutation.service';
 import { PropertiesSidebarComponent } from './properties-sidebar.component';
@@ -61,6 +62,7 @@ describe('PropertiesSidebarComponent removal actions', () => {
     TestBed.configureTestingModule({
       providers: [
         ConfirmDialogService,
+        SelectionRemovalService,
         {
           provide: PropertiesSidebarService,
           useValue: {
@@ -74,6 +76,10 @@ describe('PropertiesSidebarComponent removal actions', () => {
         },
         { provide: ElementMutationService, useValue: mutation },
         { provide: NgDiagramModelService, useValue: { getConnectedEdges: connectedEdges } },
+        {
+          provide: NgDiagramSelectionService,
+          useValue: { selection: signal({ nodes: [], edges: [] }) },
+        },
       ],
     });
   });

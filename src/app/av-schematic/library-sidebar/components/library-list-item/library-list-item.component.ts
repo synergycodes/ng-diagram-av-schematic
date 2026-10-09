@@ -6,11 +6,6 @@ import { LibraryService } from '../../library.service';
 import { type LibraryDevice } from '../../seed-library';
 import { asDevicePaletteItem } from './palette-item-cast';
 
-/**
- * One library row. The body is the drag handle only; editing lives in a separate trailing
- * button so the two gestures never share a target and a row without the button reads as
- * "nothing to edit here".
- */
 @Component({
   selector: 'app-library-list-item',
   imports: [
@@ -28,6 +23,9 @@ export class LibraryListItemComponent {
 
   readonly device = input.required<LibraryDevice>();
   readonly editable = input<boolean>(false);
+  // Off by default: the grouped list names the category in its group header, so the row would
+  // only repeat it. The flat search results turn it on, where it is the only grouping cue.
+  readonly showCategory = input<boolean>(false);
   readonly edit = output();
 
   protected readonly paletteItem = computed(() => asDevicePaletteItem(this.device().template));

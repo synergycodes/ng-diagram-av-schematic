@@ -1,10 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import {
-  NgDiagramModelService,
-  NgDiagramSelectionService,
-  type Edge,
-  type Node,
-} from 'ng-diagram';
+import { NgDiagramModelService, NgDiagramSelectionService, type Edge, type Node } from 'ng-diagram';
 import { ElementMutationService } from '../properties-sidebar/element-mutation.service';
 import {
   ConfirmDialogService,
@@ -60,11 +55,7 @@ const multiple = (nodes: Node[], edges: Edge[]): ConfirmDialogOptions => {
   };
 };
 
-/**
- * The confirmation for removing `nodes` and `edges`, worded the same for the sidebar's Remove
- * buttons and the Delete key so both paths promise the same outcome. Null when nothing is
- * removable.
- */
+/** Wording shared by the sidebar's Remove buttons and the Delete key; null when nothing is removable. */
 export const removalRequest = (
   nodes: Node[],
   edges: Edge[],
@@ -81,12 +72,7 @@ const isTextEntry = (target: EventTarget | null): boolean =>
   target instanceof HTMLElement &&
   (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName));
 
-/**
- * Keyboard removal of the current selection. ngDiagram's own `deleteSelection` and `cut`
- * shortcuts are unbound in the diagram config so that Delete and Backspace come here instead:
- * the user confirms first (design-OS Modal guideline), then the removal runs through
- * `ElementMutationService` like the sidebar buttons.
- */
+/** Removes the diagram selection from the keyboard, confirming first like the sidebar's Remove buttons. */
 @Injectable()
 export class SelectionRemovalService {
   private readonly modelService = inject(NgDiagramModelService);
@@ -109,15 +95,18 @@ export class SelectionRemovalService {
     const { nodes, edges } = this.selectionService.selection();
     const devices = nodes.filter(isDeviceNode);
     const wires = edges.filter(isWireEdge);
-    const request = removalRequest(devices, wires, (id) => this.connectedWires(id));
-    if (!request) return false;
-    const confirmed = await this.confirmDialog.confirm(request);
-    if (!confirmed) return false;
+    if (!(await this.confirmRemoval(devices, wires))) return false;
     await this.mutation.removeElements(
       devices.map((node) => node.id),
       wires.map((edge) => edge.id),
     );
     return true;
+  }
+
+  /** False when nothing is removable or the user backs out. */
+  async confirmRemoval(nodes: Node[], edges: Edge[]): Promise<boolean> {
+    const request = removalRequest(nodes, edges, (id) => this.connectedWires(id));
+    return request ? await this.confirmDialog.confirm(request) : false;
   }
 
   private connectedWires(nodeId: string): number {
