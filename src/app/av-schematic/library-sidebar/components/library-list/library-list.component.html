@@ -10,7 +10,12 @@
     <ul class="device-list">
       @for (device of filteredDevices(); track device.libraryId) {
         <li>
-          <app-library-list-item [device]="device" />
+          <app-library-list-item
+            [device]="device"
+            [editable]="true"
+            [showCategory]="true"
+            (edit)="onEditDevice(device)"
+          />
         </li>
       }
     </ul>
@@ -33,7 +38,11 @@
         <ul class="device-list">
           @for (device of group.devices; track device.libraryId) {
             <li>
-              <app-library-list-item [device]="device" />
+              <app-library-list-item
+                [device]="device"
+                [editable]="true"
+                (edit)="onEditDevice(device)"
+              />
             </li>
           }
         </ul>
@@ -41,6 +50,8 @@
     }
   }
 </div>
-<div class="list-actions">
-  <button class="add-button p10" type="button" (click)="onAddDevice()">+ Add device</button>
+<div class="sidebar-actions">
+  <button class="ghost-button add-button p10" type="button" (click)="onAddDevice()">
+    + Add device
+  </button>
 </div>

@@ -1,3 +1,6 @@
+@use '../../styles/text-field/text-field' as field;
+@use '../../styles/dropdown/dropdown' as dropdown;
+
 :host {
   display: block;
 }
@@ -6,17 +9,14 @@
   position: relative;
 }
 
+// The chrome is the size M text field; the inner input is unstyled so the border and focus
+// stroke belong to the whole control (input + caret).
 .combobox-trigger {
+  @include field.text-field;
+
   display: flex;
   align-items: stretch;
-  width: 100%;
   padding: 0;
-  border: var(--ngd-primitive-odd-1) solid var(--ngd-input-stroke-primary-default);
-  border-radius: var(--ngd-token-radius-input-m);
-  background: var(--ngd-ui-bg-primary-default);
-  color: var(--ngd-txt-primary-default);
-  transition: border-color 150ms ease;
-  box-sizing: border-box;
   position: relative;
   text-align: left;
 
@@ -36,7 +36,7 @@
   padding: var(--ngd-token-spacing-input-m-v-pad) var(--ngd-token-spacing-input-m-h-pad);
 
   &::placeholder {
-    color: var(--ngd-txt-secondary-default);
+    color: var(--ngd-txt-tertiary-default);
   }
 }
 
@@ -63,50 +63,44 @@
 }
 
 .combobox-listbox {
-  position: absolute;
-  top: calc(100% + var(--ngd-token-spacing-dropdown-wrap-s-gap));
+  @include dropdown.panel;
+
+  top: calc(100% + var(--ngd-token-spacing-dropdown-wrap-m-gap));
   left: 0;
   right: 0;
-  z-index: 10;
-  background: var(--ngd-ui-bg-primary-default);
-  border: 1px solid var(--ngd-input-stroke-primary-default);
-  border-radius: var(--ngd-token-radius-input-m);
   max-height: 220px;
   overflow-y: auto;
-  padding: var(--ngd-token-spacing-dropdown-wrap-s-gap) 0;
-  box-shadow: var(--ngd-token-shadow-shadow-s-x) var(--ngd-token-shadow-shadow-s-y)
-    var(--ngd-token-shadow-shadow-s-blur) var(--ngd-token-shadow-shadow-s-spread) var(--ngd-shadow);
 }
 
 .combobox-option {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  padding: var(--ngd-token-spacing-dropdown-wrap-s-v-pad)
-    var(--ngd-token-spacing-dropdown-wrap-s-h-pad);
-  gap: var(--ngd-token-spacing-dropdown-wrap-s-gap);
-  border: none;
-  background: transparent;
-  color: var(--ngd-txt-primary-default);
-  cursor: pointer;
-  text-align: left;
+  @include dropdown.item;
 
-  &:hover,
-  &.focused {
-    background: var(--ngd-ui-bg-secondary-default);
-  }
-
-  &.selected,
-  &.selected.focused {
+  &.selected {
     background: var(--ngd-ui-bg-tertiary-default);
   }
 }
 
 .option-label {
+  flex: 1;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  padding: var(--ngd-token-spacing-dropdown-item-s-v-pad)
-    var(--ngd-token-spacing-dropdown-item-s-h-pad);
   text-transform: capitalize;
+}
+
+// Selected row: the check is the non-colour cue (WCAG 1.4.1); the accent clears 3:1 on both surfaces.
+.check-icon {
+  flex-shrink: 0;
+  width: 12px;
+  height: 12px;
+  background-color: var(--ngd-ui-stroke-primary-highlight);
+  mask-image: url('../../../../../assets/check.svg');
+  -webkit-mask-image: url('../../../../../assets/check.svg');
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
 }

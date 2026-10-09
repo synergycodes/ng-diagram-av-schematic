@@ -12,12 +12,13 @@ import { type FormValueControl } from '@angular/forms/signals';
 import { type DevicePort, type PortDirection } from '../../../diagram/model/interfaces';
 import { AutofocusDirective } from '../../directives/autofocus/autofocus.directive';
 import { TooltipDirective } from '../../directives/tooltip/tooltip.directive';
+import { SelectComponent, type SelectOption } from '../select/select.component';
 import { CONNECTOR_TYPES } from './connector-types';
 import { generatePortId } from './generate-port-id';
 
 @Component({
   selector: 'app-ports-editor',
-  imports: [AutofocusDirective, TooltipDirective],
+  imports: [AutofocusDirective, TooltipDirective, SelectComponent],
   templateUrl: './ports-editor.component.html',
   styleUrl: './ports-editor.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -26,7 +27,11 @@ export class PortsEditorComponent implements FormValueControl<DevicePort[]> {
   readonly value = model<DevicePort[]>([]);
   readonly triggerId = input<string>();
 
-  protected readonly connectorTypes = CONNECTOR_TYPES;
+  /** The connector picker: an explicit "none" row first, so a set connector can be cleared. */
+  protected readonly connectorOptions: readonly SelectOption<string>[] = [
+    { value: '', label: '—' },
+    ...CONNECTOR_TYPES.map((connector) => ({ value: connector, label: connector })),
+  ];
   protected readonly autofocusPortId = signal<string | null>(null);
   protected readonly activeDirection = signal<PortDirection>('input');
   protected readonly addPortButton = viewChild<ElementRef<HTMLButtonElement>>('addPortButton');
@@ -40,6 +45,10 @@ export class PortsEditorComponent implements FormValueControl<DevicePort[]> {
   protected readonly visiblePorts = computed<DevicePort[]>(() =>
     this.activeDirection() === 'input' ? this.inputs() : this.outputs(),
   );
+
+  protected connectorSelectId(port: DevicePort): string {
+    return `port-${port.id}-connector`;
+  }
 
   protected setActiveDirection(direction: PortDirection): void {
     this.activeDirection.set(direction);
@@ -105,10 +114,7 @@ export class PortsEditorComponent implements FormValueControl<DevicePort[]> {
     return list[list.length - 1]?.id === port.id;
   }
 
-  /**
-   * Moves a port up or down within its direction list while preserving the
-   * positions of ports in the other direction.
-   */
+  /** Reorders within one direction list, leaving the other direction's positions untouched. */
   private movePortInDirection(id: string, delta: -1 | 1): void {
     this.value.update((ports) => {
       const target = ports.find((p) => p.id === id);

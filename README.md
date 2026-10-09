@@ -17,6 +17,7 @@ Features:
 - **Dangling wires** — drawing from a port into empty space keeps a one-ended wire stub instead of discarding it
 - **Port navigation** — double-click a port to pan to the device on the other end of the wire
 - **Properties sidebar** — edit device and wire fields with live updates, including an inline ports editor (add, remove, reorder, flip direction, pick a connector type)
+- **Confirmed removal** — removing a device, a wire, or a library template, from the sidebar buttons or with Delete / Backspace on the canvas, opens a confirmation dialog first (native `<dialog>`, focus-trapped, Esc cancels)
 - **Device library** — collapsible palette of device templates (microphones, mixers, amplifiers, loudspeakers, displays, cameras, switchers, …) you drag onto the canvas; search with match highlighting; add, edit, or remove your own templates with a save-or-discard buffer
 - **Auto device IDs** — a dropped device gets the next free ID for its category prefix (`MIC-1`, `CAM-1`, `DEV-1` for unmapped categories); the category field is an editable combobox (pick from the list or type your own)
 - **Minimap** with zoom controls, and a dark/light theme

@@ -15,7 +15,7 @@ import { formDataToDeviceData, type DeviceFieldChange } from '../device-form/dev
 import { formDataToWireData, type WireFieldChange } from './components/wire-form/wire-form.mappers';
 import { applyEdgeStretchOnSelectionMoved } from '../diagram/edge-reshaping/middleware/edge-stretch-on-move';
 
-/** Mutates diagram nodes and edges in response to sidebar form changes and removal requests, including port-direction-flip reflow and orphaned-edge cleanup. */
+/** Mutates diagram nodes and edges in response to sidebar form changes and removal requests. */
 @Injectable()
 export class ElementMutationService {
   private readonly modelService = inject(NgDiagramModelService);
@@ -27,6 +27,12 @@ export class ElementMutationService {
 
   async removeEdge(edgeId: string): Promise<void> {
     await this.modelService.deleteEdges([edgeId]);
+  }
+
+  /** Removes a mixed selection; wires go first so none is deleted twice via its device. */
+  async removeElements(nodeIds: readonly string[], edgeIds: readonly string[]): Promise<void> {
+    if (edgeIds.length > 0) await this.modelService.deleteEdges([...edgeIds]);
+    if (nodeIds.length > 0) await this.modelService.deleteNodes([...nodeIds]);
   }
 
   handleDeviceFieldChange(change: DeviceFieldChange): void {

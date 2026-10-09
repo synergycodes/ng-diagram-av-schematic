@@ -2,28 +2,54 @@
   display: block;
 }
 
+// The card runs full width on every row. The drag body fills it; editable rows add a trailing
+// action slot inside the same border (the List Box row pattern: content, then a Nav Button).
 .device-row {
+  display: flex;
+  align-items: center;
+  background: var(--av-list-item-bg);
+  border: 1px solid var(--ngd-ui-stroke-primary-default);
+  border-radius: var(--ngd-token-radius-element-8);
+  overflow: hidden;
+  transition:
+    border-color 150ms ease,
+    background 150ms ease;
+
+  // Every row is draggable, so every row gets the same hover feedback. It answers the drag body
+  // only: hovering the edit button must not promise a drag.
+  &:has(.drag-body:hover) {
+    border-color: var(--av-color-accent);
+    background: color-mix(in srgb, var(--av-color-accent) 6%, var(--av-list-item-bg));
+  }
+
+  &.editable {
+    padding-right: 3px;
+  }
+}
+
+// ng-diagram sets `width: 100%` inline on the palette item host; let it share the card with the
+// trailing slot instead.
+ng-diagram-palette-item {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.drag-body {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--ngd-primitive-4rule-8);
   padding: var(--ngd-primitive-4rule-8) var(--ngd-primitive-4rule-12);
-  background: var(--av-list-item-bg);
-  border: 1px solid var(--ngd-ui-stroke-primary-default);
-  border-radius: var(--ngd-token-radius-element-8);
   cursor: grab;
-  transition:
-    border-color 150ms ease,
-    background 150ms ease;
-
-  &:hover {
-    border-color: var(--av-color-accent);
-    background: color-mix(in srgb, var(--av-color-accent) 6%, var(--av-list-item-bg));
-  }
 
   &:active {
     cursor: grabbing;
   }
+}
+
+// Beside the button the slot's own spacing takes over.
+.editable .drag-body {
+  padding-right: var(--ngd-primitive-4rule-4);
 }
 
 .device-row__main {
@@ -52,19 +78,58 @@
 }
 
 .is-match {
-  background: var(--ngd-colors-acc1-500);
-  border-radius: 2px;
+  color: var(--av-accent-txt);
+  font-weight: 600;
 }
 
-.device-row__chip {
+// Row metadata the way the rack palette row shows device dimensions (`.row-badge`): plain
+// tertiary text, no fill or border, so the model name stays the dominant element.
+.device-row__category {
+  flex: none;
   font-size: 10px;
-  padding: 2px 6px;
-  border-radius: 8px;
-  background: var(--ngd-ui-bg-primary-default);
-  border: 1px solid var(--ngd-ui-stroke-primary-default);
-  color: var(--ngd-txt-secondary-default);
-  flex-shrink: 0;
+  color: var(--ngd-txt-tertiary-default);
   text-transform: capitalize;
+}
+
+// Always visible in the trailing slot: a pointer or keyboard user sees which rows can be edited
+// without hunting for a hover state.
+.edit-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: var(--ngd-token-radius-button-s);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--ngd-ui-bg-tertiary-default);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--av-color-accent);
+    outline-offset: -2px;
+  }
+}
+
+.icon {
+  --icon-size: 14px;
+  display: inline-block;
+  width: var(--icon-size);
+  height: var(--icon-size);
+  background-color: var(--av-accent-txt);
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+}
+
+.icon-pencil {
+  mask-image: url('../../../../../assets/pencil.svg');
+  -webkit-mask-image: url('../../../../../assets/pencil.svg');
 }
 
 .device-preview {

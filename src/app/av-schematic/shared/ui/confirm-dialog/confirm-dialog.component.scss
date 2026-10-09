@@ -1,0 +1,83 @@
+@use '../../styles/sidebar-actions/sidebar-actions' as actions;
+
+@include actions.sidebar-actions;
+
+// Design system Modal, size Regular: surface bg/base, radius modal-m, shadow L, header + content
+// + actions slots. Scrim binds gray-900 at 50% on purpose (see design-OS modal guideline).
+.confirm-dialog {
+  width: min(400px, calc(100vw - 32px));
+  padding: 0;
+  border: 1px solid var(--ngd-ui-stroke-primary-default);
+  border-radius: var(--ngd-token-radius-modal-m);
+  background: var(--ngd-ui-bg-primary-default);
+  color: var(--ngd-txt-primary-default);
+  box-shadow: var(--ngd-token-shadow-shadow-l-x) var(--ngd-token-shadow-shadow-l-y)
+    var(--ngd-token-shadow-shadow-l-blur) var(--ngd-token-shadow-shadow-l-spread) var(--ngd-shadow);
+
+  &::backdrop {
+    background: var(--ngd-colors-gray-900-50);
+  }
+
+  // The box holds initial focus (see the component note); the modal itself is the indicator, so
+  // no ring around it. The buttons keep the global focus-visible ring.
+  &:focus {
+    outline: none;
+  }
+
+  &[open] {
+    animation: confirm-dialog-enter 160ms ease forwards;
+  }
+}
+
+.dialog-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.dialog-header {
+  padding: var(--ngd-token-spacing-modal-m-header-pad);
+  border-bottom: 1px solid var(--ngd-ui-separator-primary-default);
+}
+
+.dialog-title {
+  margin: 0;
+}
+
+.dialog-message {
+  margin: 0;
+  padding: var(--ngd-token-spacing-modal-m-content-v-pad)
+    var(--ngd-token-spacing-modal-m-content-h-pad);
+  color: var(--ngd-txt-secondary-default);
+}
+
+// "2 buttons hug": confirming action on the right, Cancel on the left.
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--ngd-token-spacing-button-m-gap);
+  padding: 0 var(--ngd-token-spacing-modal-m-content-h-pad)
+    var(--ngd-token-spacing-modal-m-content-v-pad);
+
+  .action-button,
+  .remove-button {
+    width: auto;
+    padding-inline: var(--ngd-token-spacing-button-m-h-pad-2);
+  }
+}
+
+@keyframes confirm-dialog-enter {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .confirm-dialog[open] {
+    animation: none;
+  }
+}

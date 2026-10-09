@@ -1,0 +1,52 @@
+// Dropdown surfaces (design-OS List Box - Dropdown and Menu item guidelines, size M).
+//
+//   panel  the floating popover: base surface, subtle stroke, radius dropdown-wrap, elevation
+//          shadow/ui/s through the shadow tokens (never a hand-typed shadow), 4px wrap padding
+//   item   one row inside it: transparent at rest, inset surface on hover, highlight stroke for
+//          the keyboard-focused row (a border, not a ring, as the List Box item specifies)
+//
+// Selection is never colour-only: a selected row also renders a check glyph (see app-select).
+@mixin panel {
+  position: absolute;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ngd-token-spacing-dropdown-wrap-m-gap);
+  padding: var(--ngd-token-spacing-dropdown-wrap-m-v-pad)
+    var(--ngd-token-spacing-dropdown-wrap-m-h-pad);
+  background: var(--ngd-ui-bg-primary-default);
+  border: var(--ngd-primitive-odd-1) solid var(--ngd-ui-stroke-secondary-default);
+  border-radius: var(--ngd-token-radius-dropdown-wrap-m);
+  box-shadow: var(--ngd-token-shadow-shadow-s-x) var(--ngd-token-shadow-shadow-s-y)
+    var(--ngd-token-shadow-shadow-s-blur) var(--ngd-token-shadow-shadow-s-spread) var(--ngd-shadow);
+}
+
+@mixin item {
+  display: flex;
+  align-items: center;
+  gap: var(--ngd-token-spacing-dropdown-item-m-gap);
+  width: 100%;
+  padding: var(--ngd-token-spacing-dropdown-item-m-v-pad)
+    var(--ngd-token-spacing-dropdown-item-m-h-pad);
+  border: none;
+  border-radius: var(--ngd-token-radius-dropdown-item-m);
+  background: transparent;
+  color: var(--ngd-txt-primary-default);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 150ms ease;
+
+  &:hover:not(:disabled) {
+    background: var(--ngd-ui-bg-tertiary-default);
+  }
+
+  &.focused {
+    box-shadow: inset 0 0 0 var(--ngd-primitive-odd-1) var(--ngd-ui-stroke-primary-highlight);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    color: var(--av-disabled-txt);
+  }
+}

@@ -17,6 +17,7 @@ import {
 } from '../../../device-form/device-form.mappers';
 import { DeviceFormService } from '../../../device-form/device-form.service';
 import { TooltipDirective } from '../../../shared/directives/tooltip/tooltip.directive';
+import { ConfirmDialogService } from '../../../shared/ui/confirm-dialog/confirm-dialog.service';
 import { LibraryDraftService } from '../../library-draft.service';
 import { LibraryService } from '../../library.service';
 import { createBlankTemplate } from '../../seed-library';
@@ -45,6 +46,7 @@ import { createBlankTemplate } from '../../seed-library';
 export class LibraryDetailComponent {
   private readonly libraryService = inject(LibraryService);
   private readonly draftService = inject(LibraryDraftService);
+  private readonly confirmDialog = inject(ConfirmDialogService);
 
   readonly libraryId = input.required<string>();
 
@@ -89,7 +91,15 @@ export class LibraryDetailComponent {
     this.libraryService.closeDetail();
   }
 
-  protected onRemove(): void {
-    this.libraryService.removeDevice(this.libraryId());
+  protected async onRemove(): Promise<void> {
+    const libraryId = this.libraryId();
+    const template = this.libraryService.devices().find((d) => d.libraryId === libraryId)?.template;
+    const name = `${template?.manufacturer ?? ''} ${template?.model ?? ''}`.trim() || 'This device';
+    const confirmed = await this.confirmDialog.confirm({
+      title: 'Remove from library?',
+      message: `“${name}” is removed from the library. Devices already placed on the canvas are not affected.`,
+      confirmLabel: 'Remove from library',
+    });
+    if (confirmed) this.libraryService.removeDevice(libraryId);
   }
 }

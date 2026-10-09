@@ -1,0 +1,134 @@
+@use '../../styles/text-field/text-field' as field;
+@use '../../styles/dropdown/dropdown' as dropdown;
+
+:host {
+  display: block;
+}
+
+.select {
+  position: relative;
+}
+
+// The trigger is the size M text field with a caret suffix; open state keeps the focus stroke.
+.select-trigger {
+  @include field.text-field;
+
+  display: flex;
+  align-items: center;
+  gap: var(--ngd-token-spacing-input-m-gap);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  &[aria-expanded='true'] {
+    border-color: var(--ngd-input-stroke-primary-focus);
+  }
+}
+
+.select-value {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  &.placeholder {
+    color: var(--ngd-txt-tertiary-default);
+  }
+}
+
+.caret-icon,
+.check-icon {
+  flex-shrink: 0;
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+}
+
+.caret-icon {
+  width: 9px;
+  height: 5px;
+  background-color: var(--ngd-txt-secondary-default);
+  mask-image: url('../../../../../assets/caret-down.svg');
+  -webkit-mask-image: url('../../../../../assets/caret-down.svg');
+  transition: transform 150ms ease;
+
+  .select-trigger[aria-expanded='true'] & {
+    transform: rotate(180deg);
+  }
+
+  .select-trigger:disabled & {
+    background-color: var(--av-disabled-txt);
+  }
+}
+
+.select-listbox {
+  @include dropdown.panel;
+
+  // Fixed to the viewport so the panel's scroll container cannot clip it; the component sets
+  // top/left/width from the trigger's rect. Hidden until measured so it never flashes at 0,0.
+  position: fixed;
+  max-height: 220px;
+  overflow-y: auto;
+  visibility: hidden;
+
+  &.placed {
+    visibility: visible;
+  }
+}
+
+.select-option {
+  @include dropdown.item;
+}
+
+.option-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// Selected row: the check is the non-colour cue (WCAG 1.4.1); the accent clears 3:1 on both surfaces.
+.check-icon {
+  width: 12px;
+  height: 12px;
+  background-color: var(--ngd-ui-stroke-primary-highlight);
+  mask-image: url('../../../../../assets/check.svg');
+  -webkit-mask-image: url('../../../../../assets/check.svg');
+}
+
+// Size S (design-OS Text field S, List Box - dropdown item S): the same look with padding, gap
+// and radius stepped down one size on the trigger, the popover and its rows, for dense rows.
+.size-s {
+  .select-trigger {
+    padding: var(--ngd-token-spacing-input-s-v-pad) var(--ngd-token-spacing-input-s-h-pad);
+    gap: var(--ngd-token-spacing-input-s-gap);
+    border-radius: var(--ngd-token-radius-input-s);
+  }
+
+  .select-listbox {
+    gap: var(--ngd-token-spacing-dropdown-wrap-s-gap);
+    padding: var(--ngd-token-spacing-dropdown-wrap-s-v-pad)
+      var(--ngd-token-spacing-dropdown-wrap-s-h-pad);
+    border-radius: var(--ngd-token-radius-dropdown-wrap-s);
+  }
+
+  .select-option {
+    gap: var(--ngd-token-spacing-dropdown-item-s-gap);
+    padding: var(--ngd-token-spacing-dropdown-item-s-v-pad)
+      var(--ngd-token-spacing-dropdown-item-s-h-pad);
+    border-radius: var(--ngd-token-radius-dropdown-item-s);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .caret-icon,
+  .select-trigger,
+  .select-option {
+    transition: none;
+  }
+}

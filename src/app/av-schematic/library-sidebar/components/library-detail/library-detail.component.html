@@ -1,22 +1,23 @@
 <div class="detail-toolbar">
-  <span class="detail-title h10">{{ title() }}</span>
   <button
-    class="close-button"
+    class="back-button"
     type="button"
+    aria-label="Back to library"
+    appTooltip="Back to library"
+    tooltipPlacement="right"
     (click)="onBack()"
-    aria-label="Close"
-    appTooltip="Close"
   >
-    <span class="icon icon-close" aria-hidden="true"></span>
+    <span class="icon icon-arrow-left" aria-hidden="true"></span>
   </button>
+  <span class="detail-title h10">{{ title() }}</span>
 </div>
 
 <div class="detail-form">
   <app-device-form [entityId]="libraryId()" [nodeData]="initialTemplate()" />
 </div>
 
-<div class="detail-actions">
-  <button class="save-button p10" type="button" (click)="onSave()" [disabled]="!canSave()">
+<div class="sidebar-actions">
+  <button class="primary-button p10" type="button" (click)="onSave()" [disabled]="!canSave()">
     Save
   </button>
   @if (mode() === 'edit') {

@@ -1,3 +1,7 @@
+@use '../../../shared/styles/sidebar-actions/sidebar-actions' as actions;
+
+@include actions.sidebar-actions((primary, remove));
+
 :host {
   display: flex;
   flex-direction: column;
@@ -8,9 +12,8 @@
 .detail-toolbar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: var(--ngd-primitive-4rule-8);
-  padding: var(--ngd-primitive-4rule-8) var(--ngd-primitive-4rule-16);
+  padding: var(--ngd-primitive-4rule-12);
   border-bottom: 1px solid var(--ngd-ui-separator-primary-default);
 }
 
@@ -18,26 +21,35 @@
   color: var(--ngd-txt-primary-default);
 }
 
-.close-button {
-  display: inline-flex;
+// Back to the library list. A leading arrow reads as "go back" where a trailing ✕ read as
+// "dismiss", which is not what leaving an edit form does.
+.back-button {
+  display: flex;
   align-items: center;
   justify-content: center;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  padding: 0;
   background: transparent;
   border: none;
   border-radius: var(--ngd-token-radius-button-s);
-  padding: var(--ngd-token-spacing-button-s-v-pad-2);
   cursor: pointer;
   transition: background 150ms ease;
 
   &:hover {
     background: var(--ngd-ui-bg-tertiary-default);
+
+    .icon {
+      background-color: var(--ngd-nav-button-icon-primary-hover);
+    }
   }
 }
 
 .icon {
   display: inline-block;
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   background-color: var(--ngd-nav-button-icon-primary-default);
   mask-size: contain;
   mask-repeat: no-repeat;
@@ -47,9 +59,9 @@
   -webkit-mask-position: center;
 }
 
-.icon-close {
-  mask-image: url('../../../../../assets/close.svg');
-  -webkit-mask-image: url('../../../../../assets/close.svg');
+.icon-arrow-left {
+  mask-image: url('../../../../../assets/arrow-left.svg');
+  -webkit-mask-image: url('../../../../../assets/arrow-left.svg');
 }
 
 .detail-form {
@@ -60,59 +72,8 @@
   overflow-y: auto;
 }
 
-.detail-actions {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ngd-primitive-4rule-8);
-  padding: var(--ngd-primitive-4rule-16);
+// The footer keeps its own separator so the form scrolls under it; the mixin owns the button system.
+.sidebar-actions {
   margin-top: auto;
-}
-
-.save-button {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  border-radius: var(--ngd-token-radius-button-m);
-  background: var(--ngd-button-primary-bg-default);
-  color: var(--ngd-txt-primary-white);
-  cursor: pointer;
-  padding: var(--ngd-token-spacing-button-m-v-pad-2);
-  transition: background 150ms ease;
-
-  &:hover:not(:disabled) {
-    background: var(--ngd-button-primary-bg-hover);
-  }
-
-  &:active:not(:disabled) {
-    background: var(--ngd-button-primary-bg-active);
-  }
-
-  &:disabled {
-    cursor: not-allowed;
-    opacity: 0.5;
-  }
-}
-
-.remove-button {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  border-radius: var(--ngd-token-radius-button-m);
-  background: var(--ngd-button-red-bg-default);
-  color: var(--ngd-txt-primary-white);
-  cursor: pointer;
-  padding: var(--ngd-token-spacing-button-m-v-pad-2);
-  transition: background 150ms ease;
-
-  &:hover {
-    background: var(--ngd-button-red-bg-hover);
-  }
-
-  &:active {
-    background: var(--ngd-button-red-bg-active);
-  }
+  border-top: 1px solid var(--ngd-ui-separator-primary-default);
 }

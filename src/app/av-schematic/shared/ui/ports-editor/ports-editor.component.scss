@@ -1,13 +1,23 @@
+@use '../../styles/sidebar-actions/sidebar-actions' as actions;
+
+// Only the Ghost-Primary variant is used here ("+ Add new port"); see the mixin for the system.
+@include actions.sidebar-actions((ghost));
+
 :host {
   display: flex;
   flex-direction: column;
   gap: var(--ngd-primitive-4rule-12);
 }
 
+// Segmented tab strip (design-OS Segment Picker, same treatment as the rack library tabs): the
+// inset list surface with a stroke, and the active tab lifted onto the base surface with the
+// shadow/ui/s elevation, so the state is not carried by colour alone. Each segment is a Nav
+// Button, so its label stays Label/M Regular (the .p10 utility) and hover is the Nav Button fill.
 .tabs {
   display: flex;
   gap: var(--ngd-primitive-4rule-4);
-  background: var(--ngd-colors-gray-800);
+  background: var(--av-list-item-bg);
+  border: var(--ngd-primitive-odd-1) solid var(--ngd-ui-stroke-secondary-default);
   border-radius: var(--ngd-token-radius-element-8);
   padding: var(--ngd-primitive-4rule-4);
 }
@@ -21,7 +31,6 @@
   background: transparent;
   color: var(--ngd-txt-secondary-default);
   font-family: inherit;
-  font-weight: 600;
   padding: var(--ngd-primitive-4rule-8) var(--ngd-primitive-even-10);
   border-radius: var(--ngd-token-radius-button-s);
   cursor: pointer;
@@ -30,11 +39,15 @@
     color 150ms ease;
 
   &.is-active {
-    background: var(--ngd-button-primary-bg-default);
-    color: var(--ngd-txt-primary-white);
+    background: var(--ngd-ui-bg-primary-default);
+    color: var(--ngd-txt-primary-default);
+    box-shadow: var(--ngd-token-shadow-shadow-s-x) var(--ngd-token-shadow-shadow-s-y)
+      var(--ngd-token-shadow-shadow-s-blur) var(--ngd-token-shadow-shadow-s-spread)
+      var(--ngd-shadow);
   }
 
   &:not(.is-active):hover {
+    background: var(--ngd-nav-button-bg-primary-hover);
     color: var(--ngd-txt-primary-default);
   }
 }
@@ -94,39 +107,28 @@
   min-width: 0;
 }
 
+// The connector picker is the shared select at size S, so it matches the wire type dropdown and
+// rack's field system; its label is only for assistive tech in the dense row.
 .connector-wrap {
   position: relative;
-  width: 80px;
-  flex-shrink: 0;
+  flex: 0 0 96px;
+  min-width: 0;
 }
 
-.port-connector {
-  width: 100%;
-  padding-right: 28px;
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-}
-
-.connector-caret {
+.visually-hidden {
   position: absolute;
-  top: 50%;
-  right: var(--ngd-primitive-4rule-8);
-  width: 16px;
-  height: 16px;
-  transform: translateY(-50%);
-  background-color: var(--ngd-nav-button-icon-primary-default);
-  mask-image: url('../../../../../assets/caret-down.svg');
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url('../../../../../assets/caret-down.svg');
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-  pointer-events: none;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
+// Ghost-Secondary icon-only button (design-OS Button: hover steps the fill one shade, the glyph
+// keeps its colour, so Remove port stays neutral under the pointer like every other row action).
 .icon-button {
   display: inline-flex;
   align-items: center;
@@ -136,55 +138,25 @@
   border-radius: var(--ngd-token-radius-button-xxxs);
   cursor: pointer;
   padding: var(--ngd-primitive-4rule-4);
+  flex-shrink: 0;
   transition: background 150ms ease;
 
   &:hover:not(:disabled) {
     background: var(--ngd-ui-bg-tertiary-default);
   }
 
+  // Disabled binds the designed token rather than opacity, so the glyph still reads as present.
   &:disabled {
-    cursor: default;
-    opacity: 0.4;
-  }
-}
+    cursor: not-allowed;
 
-.icon-action {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  padding: 0;
-  flex-shrink: 0;
-
-  &.danger:hover .icon {
-    background-color: var(--ngd-button-red-bg-default);
+    .icon {
+      background-color: var(--av-disabled-txt);
+    }
   }
 }
 
 .add-port-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--ngd-primitive-4rule-8);
-  width: 100%;
-  background: transparent;
-  border: 1px solid var(--ngd-ui-stroke-secondary-default);
-  border-radius: var(--ngd-token-radius-button-m);
-  color: var(--ngd-txt-primary-default);
-  font-family: inherit;
-  font-weight: 600;
-  padding: var(--ngd-token-spacing-button-s-v-pad-2) var(--ngd-token-spacing-button-s-h-pad-2);
-  cursor: pointer;
-  transition:
-    background 150ms ease,
-    border-color 150ms ease;
-
-  &:hover {
-    background: var(--ngd-ui-bg-tertiary-default);
-    border-color: var(--av-color-accent);
-  }
+  align-self: flex-start;
 }
 
 .icon {
@@ -200,8 +172,8 @@
   -webkit-mask-position: center;
 }
 
-.icon-action .icon,
-.add-port-button .icon {
+// Swap / remove glyphs are larger than the reorder carets; the button shell stays the same.
+.row-actions .icon {
   width: 18px;
   height: 18px;
 }
@@ -224,9 +196,4 @@
 .icon-trash {
   mask-image: url('../../../../../assets/trash.svg');
   -webkit-mask-image: url('../../../../../assets/trash.svg');
-}
-
-.icon-plus-circle {
-  mask-image: url('../../../../../assets/plus-circle.svg');
-  -webkit-mask-image: url('../../../../../assets/plus-circle.svg');
 }

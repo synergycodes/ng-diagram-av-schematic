@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { SelectionRemovalService } from '../diagram/selection-removal.service';
 import { DeviceFormComponent } from '../device-form/device-form.component';
 import { ON_DEVICE_FIELD_CHANGE, type DeviceFieldChange } from '../device-form/device-form.mappers';
 import { DeviceFormService } from '../device-form/device-form.service';
@@ -51,6 +52,7 @@ import { PropertiesSidebarService } from './properties-sidebar.service';
 export class PropertiesSidebarComponent {
   private readonly sidebarService = inject(PropertiesSidebarService);
   private readonly elementMutationService = inject(ElementMutationService);
+  private readonly selectionRemoval = inject(SelectionRemovalService);
 
   protected readonly isExpanded = this.sidebarService.isExpanded;
   protected readonly state = this.sidebarService.sidebarState;
@@ -65,17 +67,18 @@ export class PropertiesSidebarComponent {
     this.sidebarService.toggleSidebarVisibility();
   }
 
-  protected onRemoveNode(): void {
-    const nodeId = this.sidebarService.selectedNode()?.id;
-    if (nodeId) {
-      void this.elementMutationService.removeNode(nodeId);
+  /** Removing a device also drops its wires, so it asks first (design-OS Modal guideline). */
+  protected async onRemoveNode(): Promise<void> {
+    const node = this.sidebarService.selectedNode();
+    if (node && (await this.selectionRemoval.confirmRemoval([node], []))) {
+      await this.elementMutationService.removeNode(node.id);
     }
   }
 
-  protected onRemoveWire(): void {
-    const edgeId = this.sidebarService.selectedEdge()?.id;
-    if (edgeId) {
-      void this.elementMutationService.removeEdge(edgeId);
+  protected async onRemoveWire(): Promise<void> {
+    const edge = this.sidebarService.selectedEdge();
+    if (edge && (await this.selectionRemoval.confirmRemoval([], [edge]))) {
+      await this.elementMutationService.removeEdge(edge.id);
     }
   }
 

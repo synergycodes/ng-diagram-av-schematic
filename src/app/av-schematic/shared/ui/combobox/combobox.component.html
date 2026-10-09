@@ -47,6 +47,9 @@
           (click)="select(option)"
         >
           <span class="option-label">{{ option }}</span>
+          @if (isSelected(option)) {
+            <span class="check-icon" aria-hidden="true"></span>
+          }
         </div>
       }
     </div>

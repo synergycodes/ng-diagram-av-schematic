@@ -13,12 +13,11 @@
     </app-form-field>
 
     <app-form-field label="Wire type" fieldId="wireType">
-      <select id="wireType" class="form-input p10" [formField]="fieldTree.wireType">
-        <option value="">—</option>
-        @for (type of wireTypes; track type) {
-          <option [value]="type">{{ type }}</option>
-        }
-      </select>
+      <app-select
+        selectId="wireType"
+        [options]="wireTypeOptions"
+        [formField]="fieldTree.wireType"
+      />
     </app-form-field>
   </div>
 </div>

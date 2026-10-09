@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, inject } from '@angular/core';
 import {
+  configureShortcuts,
   DiagramInitEvent,
   initializeModel,
   NgDiagramBackgroundComponent,
@@ -38,6 +39,7 @@ import { applyEdgeStretchOnSelectionMoved } from './edge-reshaping/middleware/ed
 import { EdgeReshapeOverlayComponent } from './edge-reshaping/edge-reshape-overlay.component';
 import { WireEdgeComponent } from './wire-edge.component';
 import { diagramModel } from './data';
+import { SelectionRemovalService } from './selection-removal.service';
 
 const generateWireId = (): string => randomShortId('W');
 
@@ -47,6 +49,7 @@ const generateWireId = (): string => randomShortId('W');
   templateUrl: './diagram.component.html',
   styleUrl: './diagram.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { '(document:keydown)': 'onKeydown($event)' },
 })
 export class DiagramComponent {
   private readonly avConfig = inject(AV_SCHEMATIC_CONFIG);
@@ -57,6 +60,7 @@ export class DiagramComponent {
   private readonly elementRef = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly exportService = inject(DiagramExportService);
   private readonly danglingEdge = inject(DanglingEdgeService);
+  private readonly selectionRemoval = inject(SelectionRemovalService);
 
   constructor() {
     this.exportService.setDiagramElement(this.elementRef);
@@ -112,6 +116,12 @@ export class DiagramComponent {
     zIndex: {
       elevateOnSelection: false,
     },
+    // Delete, Backspace and Cut would drop devices and wires with no confirmation;
+    // `SelectionRemovalService` handles the keys instead (see `onKeydown`).
+    shortcuts: configureShortcuts([
+      { actionName: 'deleteSelection', bindings: [] },
+      { actionName: 'cut', bindings: [] },
+    ]),
   } satisfies NgDiagramConfig;
 
   nodeTemplateMap = new NgDiagramNodeTemplateMap([
@@ -121,6 +131,10 @@ export class DiagramComponent {
   edgeTemplateMap = new NgDiagramEdgeTemplateMap([[EdgeTemplateType.WireEdge, WireEdgeComponent]]);
 
   model = initializeModel(diagramModel);
+
+  protected onKeydown(event: KeyboardEvent): void {
+    this.selectionRemoval.handleKeydown(event, this.elementRef.nativeElement);
+  }
 
   onDiagramInit(_: DiagramInitEvent): void {
     this.zoomToFit();

@@ -1,3 +1,7 @@
+@use '../../../shared/styles/sidebar-actions/sidebar-actions' as actions;
+
+@include actions.sidebar-actions((ghost));
+
 :host {
   display: flex;
   flex-direction: column;
@@ -8,6 +12,8 @@
 .list-scroll {
   flex: 1;
   min-height: 0;
+  display: flex;
+  flex-direction: column;
   overflow-y: auto;
   padding: var(--ngd-primitive-4rule-8) var(--ngd-primitive-4rule-12);
 }
@@ -26,8 +32,8 @@
     margin-top: var(--ngd-primitive-4rule-12);
   }
 
-  &[open] .device-group__caret {
-    transform: translateY(-3px) rotate(45deg);
+  &[open] .device-group__caret::before {
+    transform: translate(-50%, -50%) rotate(90deg);
   }
 }
 
@@ -52,17 +58,32 @@
 
   &:hover {
     color: var(--ngd-txt-primary-default);
+
+    .device-group__caret::before {
+      border-left-color: var(--ngd-txt-primary-default);
+    }
   }
 }
 
+// Same filled-triangle disclosure as the rack project tree: 14px hit box, points right when
+// collapsed, rotates to point down when open.
 .device-group__caret {
-  width: 8px;
-  height: 8px;
-  border-right: 1.5px solid currentColor;
-  border-bottom: 1.5px solid currentColor;
-  transform: rotate(-45deg);
-  transition: transform 120ms ease;
-  flex-shrink: 0;
+  position: relative;
+  flex: 0 0 14px;
+  height: 14px;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-block: 4px solid transparent;
+    border-left: 5px solid var(--ngd-txt-tertiary-default);
+    transform: translate(-50%, -50%);
+    transition: transform 120ms ease;
+  }
 }
 
 .device-group__label {
@@ -82,30 +103,8 @@
   padding: var(--ngd-primitive-4rule-24);
 }
 
-.list-actions {
-  padding: var(--ngd-primitive-4rule-16);
+// Fixed footer under the scrolling list, same anatomy as the detail form's Save footer: the mixin
+// owns the padding and the button system, the separator keeps the list scrolling under it.
+.sidebar-actions {
   border-top: 1px solid var(--ngd-ui-separator-primary-default);
-  margin-top: auto;
-}
-
-.add-button {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  border-radius: var(--ngd-token-radius-button-m);
-  background: var(--ngd-button-primary-bg-default);
-  color: var(--ngd-txt-primary-white);
-  cursor: pointer;
-  padding: var(--ngd-token-spacing-button-m-v-pad-2);
-  transition: background 150ms ease;
-
-  &:hover {
-    background: var(--ngd-button-primary-bg-hover);
-  }
-
-  &:active {
-    background: var(--ngd-button-primary-bg-active);
-  }
 }

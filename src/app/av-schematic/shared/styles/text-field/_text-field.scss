@@ -1,0 +1,36 @@
+// Text field, size M (design-OS Text field guideline). One look for every typed or picked value
+// in the sidebars: input stroke default -> focus, radius input-m, base surface. Disabled binds the
+// designed disabled tokens rather than opacity, so a disabled field still reads as present.
+@mixin text-field {
+  width: 100%;
+  padding: var(--ngd-token-spacing-input-m-v-pad) var(--ngd-token-spacing-input-m-h-pad);
+  border: var(--ngd-primitive-odd-1) solid var(--ngd-input-stroke-primary-default);
+  border-radius: var(--ngd-token-radius-input-m);
+  background: var(--ngd-ui-bg-primary-default);
+  color: var(--ngd-txt-primary-default);
+  outline: none;
+  transition: border-color 150ms ease;
+  box-sizing: border-box;
+
+  &::placeholder {
+    color: var(--ngd-txt-tertiary-default);
+  }
+
+  &:focus {
+    border-color: var(--ngd-input-stroke-primary-focus);
+  }
+
+  // Critical state (design-OS Text field guideline): error stroke and tint, always paired with
+  // helper text that the control references through aria-describedby.
+  &[aria-invalid='true'] {
+    border-color: var(--ngd-input-stroke-primary-error);
+    background: var(--ngd-input-bg-primary-error);
+  }
+
+  &:disabled {
+    color: var(--av-disabled-txt);
+    background: var(--av-disabled-bg);
+    border-color: var(--av-disabled-stroke);
+    cursor: not-allowed;
+  }
+}
